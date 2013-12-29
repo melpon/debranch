@@ -1,0 +1,3 @@
+SPECs for Wandbox's compiler packages
+
+This project provides RPM SPEC files for compilers used by the Wandbox service.
