@@ -1,0 +1,205 @@
+{
+ "switches":{
+  "warning":{
+   "flags":["-Wall", "-Wextra"],
+   "display-name":"Warnings",
+  },
+  "oldgcc-warning":{
+   "flags":["-Wall", "-W"],
+   "display-name":"Warnings",
+  },
+  "haskell-warning":{
+   "flags":"-Wall",
+   "display-name":"Warnings",
+  },
+  "optimize":{
+   "flags":["-O2", "-march=native"],
+   "display-name":"Optimization",
+  },
+  "haskell-optimize":{
+   "flags":"-O2",
+   "display-name":"Optimization",
+  },
+  "mono-optimize":{
+   "flags":"-optimize",
+   "display-name":"Optimization",
+  },
+  "c89":{
+   "flags":["-std=c89", "-pedantic-errors"],
+   "display-name":"C89",
+   "conflicts":["gnu++1y", "gnu++11", "gnu++0x", "gnu++98", "c++1y", "c++11", "c++0x", "c++98", "c11", "c99"],
+  },
+  "c99":{
+   "flags":["-std=c99", "-pedantic-errors"],
+   "display-name":"C99",
+   "conflicts":["gnu++1y", "gnu++11", "gnu++0x", "gnu++98", "c++1y", "c++11", "c++0x", "c++98", "c11", "c89"],
+  },
+  "c11":{
+   "flags":["-std=c11", "-pedantic-errors"],
+   "display-name":"C11",
+   "conflicts":["gnu++1y", "gnu++11", "gnu++0x", "gnu++98", "c++1y", "c++11", "c++0x", "c++98", "c99", "c89"],
+  },
+  "c++98":{
+   "flags":["-std=c++98", "-pedantic"],
+   "display-name":"C++03",
+   "conflicts":["gnu++1y", "gnu++11", "gnu++0x", "gnu++98", "c++1y", "c++11", "c++0x", "c11", "c99", "c89"],
+  },
+  "gnu++98":{
+   "flags":"-std=gnu++98",
+   "display-name":"C++03(GNU)",
+   "conflicts":["gnu++1y", "gnu++11", "gnu++0x", "c++1y", "c++11", "c++0x", "c++98", "c11", "c99", "c89"],
+  },
+  "c++0x":{
+   "flags":["-std=c++0x", "-pedantic"],
+   "display-name":"C++0x",
+   "conflicts":["gnu++1y", "gnu++11", "gnu++0x", "gnu++98", "c++1y", "c++11", "c++98", "c11", "c99", "c89"],
+  },
+  "gnu++0x":{
+   "flags":"-std=gnu++0x",
+   "display-name":"C++0x(GNU)",
+   "conflicts":["gnu++1y", "gnu++11", "gnu++98", "c++1y", "c++11", "c++0x", "c++98", "c11", "c99", "c89"],
+  },
+  "c++11":{
+   "flags":["-std=c++11", "-pedantic"],
+   "display-name":"C++11",
+   "conflicts":["gnu++1y", "gnu++11", "gnu++0x", "gnu++98", "c++1y", "c++0x", "c++98", "c11", "c99", "c89"],
+  },
+  "gnu++11":{
+   "flags":"-std=gnu++11",
+   "display-name":"C++11(GNU)",
+   "conflicts":["gnu++1y", "gnu++0x", "gnu++98", "c++1y", "c++11", "c++0x", "c++98", "c11", "c99", "c89"],
+  },
+  "c++1y":{
+   "flags":["-std=c++1y", "-pedantic"],
+   "display-name":"C++1y",
+   "conflicts":["gnu++1y", "gnu++11", "gnu++0x", "gnu++98", "c++11", "c++0x", "c++98", "c11", "c99", "c89"],
+  },
+  "gnu++1y":{
+   "flags":"-std=gnu++1y",
+   "display-name":"C++1y(GNU)",
+   "conflicts":["gnu++11", "gnu++0x", "gnu++98", "c++1y", "c++11", "c++0x", "c++98", "c11", "c99", "c89"],
+  },
+  "cpp-verbose":{
+   "flags":["-v"],
+   "display-name":"Verbose",
+  },
+  "cpp-p":{
+   "flags":["-P"],
+   "display-name":"-P",
+   "runtime":true,
+  },
+ },
+ "compilers":[
+  {
+   "name":"bin-common",
+   "displayable":false,
+   "output-file":"prog.exe",
+   "run-command":"./prog.exe"
+  },{
+   "name":"gcc-common",
+   "displayable":false,
+   "display-name":"gcc",
+   "display-compile-command":"g++ prog.cc",
+   "language":"C++",
+   "source-suffix":".cc",
+   "inherits":"bin-common"
+  },{
+   "name":"clang-common",
+   "displayable":false,
+   "display-name":"clang",
+   "display-compile-command":"clang++ prog.cc -stdlib=libc++",
+   "inherits":"gcc-common"
+  },{
+   "name":"gcc-head",
+   "displayable":true,
+   "display-name":"gcc HEAD",
+   "compiler-option-raw":true,
+   "compile-command":[
+    "/usr/local/wandbox/gcc-head/bin/g++",
+    "-oprog.exe",
+    "-Wl,-rpath,/usr/local/wandbox/gcc-head/lib64",
+    "-lpthread",
+    "prog.cc"
+   ],
+   "version-command":["/bin/sh", "-c", "/usr/local/wandbox/gcc-head/bin/g++ --version | head -1 | cut -d' ' -f3-"],
+   "switches":["warning", "optimize", "cpp-verbose", "c++98", "gnu++98", "c++11", "gnu++11", "c++1y", "gnu++1y"],
+   "initial-checked":["warning", "gnu++1y"],
+   "inherits":"gcc-common",
+  },{
+   "name":"gcc-4.7.3",
+   "displayable":true,
+   "compiler-option-raw":true,
+   "compile-command":[
+    "/usr/local/wandbox/gcc-4.7.3/bin/g++",
+    "-oprog.exe",
+    "-Wl,-rpath,/usr/local/wandbox/gcc-4.7.3/lib64",
+    "-lpthread",
+    "prog.cc"
+   ],
+   "version-command":["/usr/local/wandbox/gcc-4.7.3/bin/g++", "-dumpversion"],
+   "switches":["warning", "optimize", "cpp-verbose", "c++98", "gnu++98", "c++11", "gnu++11"],
+   "initial-checked":["warning", "gnu++11"],
+   "inherits":"gcc-common"
+  },{
+   "name":"clang-head",
+   "displayable":true,
+   "display-name":"clang HEAD",
+   "compiler-option-raw":true,
+   "compile-command":[
+    "/usr/local/wandbox/llvm-head/bin/clang++",
+    "-oprog.exe",
+    "-stdlib=libc++",
+    "-I/usr/local/wandbox/libcxx-head/include/c++/v1",
+    "-L/usr/local/wandbox/libcxx-head/lib",
+    "-Wl,-rpath,/usr/local/wandbox/libcxx-head/lib",
+    "-nostdinc++",
+    "-lpthread",
+    "prog.cc",
+    "-lsupc++"
+   ],
+   "version-command":["/bin/sh", "-c", "/usr/local/wandbox/llvm-head/bin/clang++ --version | head -1 | cut -d' ' -f3-"],
+   "switches":["warning", "optimize", "cpp-verbose", "c++98", "gnu++98", "c++11", "gnu++11", "c++1y", "gnu++1y"],
+   "initial-checked":["warning", "gnu++1y"],
+   "inherits":"clang-common",
+  },{
+   "name":"clang-3.3",
+   "displayable":true,
+   "compiler-option-raw":true,
+   "compile-command":[
+    "/usr/local/wandbox/llvm-3.3/bin/clang++",
+    "-oprog.exe",
+    "-stdlib=libc++",
+    "-I/usr/local/wandbox/libcxx-3.3/include/c++/v1",
+    "-L/usr/local/wandbox/libcxx-3.3/lib",
+    "-Wl,-rpath,/usr/local/wandbox/libcxx-3.3/lib",
+    "-nostdinc++",
+    "-lpthread",
+    "prog.cc",
+    "-lsupc++"
+   ],
+   "version-command":["/bin/sh", "-c", "/usr/local/wandbox/llvm-3.3/bin/clang++ --version | head -1 | cut -d' ' -f3-"],
+   "switches":["warning", "optimize", "cpp-verbose", "c++98", "gnu++98", "c++11", "gnu++11", "c++1y", "gnu++1y"],
+   "initial-checked":["warning", "gnu++1y"],
+   "inherits":"clang-common",
+  },{
+   "name":"clang-3.3-c",
+   "displayable":true,
+   "display-name":"clang",
+   "display-compile-command":"clang prog.c",
+   "language":"C",
+   "source-suffix":".c",
+   "inherits":"bin-common",
+   "compiler-option-raw":true,
+   "compile-command":[
+    "/usr/local/wandbox/llvm-3.3/bin/clang",
+    "-oprog.exe",
+    "-lpthread",
+    "prog.c"
+   ],
+   "version-command":["/bin/sh", "-c", "/usr/local/wandbox/llvm-3.3/bin/clang --version | head -1 | cut -d' ' -f3-"],
+   "switches":["warning", "optimize", "cpp-verbose", "c89", "c99", "c11"],
+   "initial-checked":["warning", "c11"],
+   "inherits":"clang-common",
+  }
+ ]
+}

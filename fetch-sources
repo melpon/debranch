@@ -1,0 +1,73 @@
+#!/bin/bash
+
+declare -A SHA1
+declare -A MD5
+declare -A NOVERIFY
+
+srcdir=$(realpath "$(dirname "$0")")
+. sources.list
+
+cksum() {
+  echo "$2  $3" | ${1}sum --check
+}
+fetch() {
+  if echo "$1" | grep -q '://'; then
+    wget "$1"
+  else
+    cp "$srcdir/sources/$1" .
+  fi
+}
+
+(
+  success=true
+  cd ~/rpmbuild/SOURCES
+  for k in ${!SHA1[@]}; do
+    f="$(basename "$k")"
+    s="${SHA1[$k]}"
+    if [ -f "$f" ] && cksum sha1 "$s" "$f"; then
+      continue
+    fi
+    rm -f "$f"
+    if ! fetch "$k"; then
+      echo "failed to download: $k" >&2
+      success=false
+      continue
+    fi
+    if ! cksum sha1 "$s" "$f"; then
+      echo "checksum unmatch: $k" >&2
+      success=false
+      continue
+    fi
+  done
+  for k in ${!MD5[@]}; do
+    f="$(basename "$k")"
+    s="${MD5[$k]}"
+    if [ -f "$f" ] && cksum md5 "$s" "$f"; then
+      continue
+    fi
+    rm -f "$f"
+    if ! fetch "$k"; then
+      echo "failed to download: $k" >&2
+      success=false
+      continue
+    fi
+    if ! cksum md5 "$s" "$f"; then
+      echo "checksum unmatch: $k" >&2
+      success=false
+      continue
+    fi
+  done
+  for k in ${!NOVERIFY[@]}; do
+    f="$(basename "$k")"
+    if [ -f "$f" ]; then
+      continue
+    fi
+    if ! fetch "$k"; then
+      echo "failed to download: $k" >&2
+      success=false
+      continue
+    fi
+  done
+  $success
+)
+

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+sudo apt-get install $(rpmspec --srpm -q "$1" --qf '[%{REQUIRENAME} ]') && \
+rpmbuild -ba "$1" --nodeps && \
+fakeroot alien -k --scripts ~/rpmbuild/RPMS/$(rpmspec --srpm -q "$1" --qf '%{ARCH}')/$(rpmspec --srpm -q "$1" --qf '%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}.rpm')

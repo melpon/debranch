@@ -1,0 +1,20 @@
+Default: &defaults
+  database: /var/lib/kennel/default.sqlite3
+  poolsize: 10
+
+Development:
+  <<: *defaults
+
+Testing:
+  database: /var/lib/kennel/test.sqlite3
+  <<: *defaults
+
+Staging:
+  database: /var/lib/kennel/staging.sqlite3
+  poolsize: 100
+  <<: *defaults
+
+Production:
+  database: /var/lib/kennel/production.sqlite3
+  poolsize: 100
+  <<: *defaults
