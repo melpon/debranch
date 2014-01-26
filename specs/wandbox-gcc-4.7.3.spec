@@ -1,5 +1,5 @@
 Summary: gcc for wandbox
-Name: wandbox-gcc-4.7
+Name: wandbox-gcc-4.7.3
 Version: 4.7.3
 Release: 1
 License: GPL
@@ -9,7 +9,7 @@ BuildRequires: libgmp-dev libmpfr-dev libmpc-dev
 Source0: http://ftp.tsukuba.wide.ad.jp/software/gcc/releases/gcc-%{version}/gcc-%{version}.tar.gz
 URL: http://melpon.org/wandbox
 
-%define _prefix /usr/local/wandbox/gcc-%{version}
+%define _prefix /opt/wandbox/gcc-%{version}
 %define _configure ../gcc-%{version}/configure
 
 %description
@@ -44,3 +44,4 @@ rm -rf %{buildroot}
 %changelog
  * Sun Dec 29 2013 kikairoya <kikairoya@gmail.com>
  - Initial build
+

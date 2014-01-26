@@ -10,7 +10,7 @@ Source1: http://llvm.org/releases/%{version}/cfe-%{version}.src.tar.gz
 Source2: http://llvm.org/releases/%{version}/compiler-rt-%{version}.src.tar.gz
 URL: http://melpon.org/wandbox
 
-%define _prefix /usr/local/wandbox/llvm-%{version}
+%define _prefix /opt/wandbox/llvm-%{version}
 %define _configure ../llvm-%{version}.src/configure
 
 %description

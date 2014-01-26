@@ -8,7 +8,7 @@ BuildRoot: %{_tmppath}/%{name}-head-%{release}-buildroot
 BuildRequires: subversion
 URL: http://melpon.org/wandbox
 
-%define _prefix /usr/local/wandbox/llvm-head
+%define _prefix /opt/wandbox/llvm-head
 %define _configure ../source/configure
 
 %description

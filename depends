@@ -1,0 +1,8 @@
+build-essential
+fakeroot
+rpm
+alien
+realpath
+git
+svn
+wget

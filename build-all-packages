@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -e
+cd "$(dirname "$0")"
+./fetch-sources
+./gen-boost-spec
+for pkg in $(cat series); do
+  pkgname="$(rpmspec --srpm -q specs/$pkg.spec --qf "%{NAME}")"
+  pkgver="$(rpmspec --srpm -q specs/$pkg.spec --qf "%{VERSION}")"
+  pkgrel="$(rpmspec --srpm -q specs/$pkg.spec --qf "%{RELEASE}")"
+  if dpkg --compare-versions "$(dpkg-query -W -f '${Version}' "${pkgname}" 2> /dev/null)" lt "${pkgver}-${pkgrel}"; then
+    ./build-deb-from-spec specs/$pkg.spec
+    sudo dpkg -i "${pkgname}_${pkgver}-${pkgrel}_$(dpkg-architecture -c 'echo $DEB_HOST_ARCH').deb"
+  fi
+done

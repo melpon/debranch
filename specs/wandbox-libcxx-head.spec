@@ -9,8 +9,8 @@ Requires: wandbox-llvm-head
 BuildRequires: cmake subversion
 URL: http://melpon.org/wandbox
 
-%define llvmdir /usr/local/wandbox/llvm-head
-%define _prefix /usr/local/wandbox/libcxx-head
+%define llvmdir /opt/wandbox/llvm-head
+%define _prefix /opt/wandbox/libcxx-head
 %define _configure ../source/configure
 
 %description

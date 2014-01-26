@@ -1,0 +1,6 @@
+description "Frontend of Wandbox"
+start on runlevel [2345]:
+stop on runlevel [!2345]:
+respawn
+chdir @@prefix@@
+exec env - su kennel -c '@@bindir@@/kennel Production'

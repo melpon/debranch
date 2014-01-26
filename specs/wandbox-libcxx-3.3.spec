@@ -10,8 +10,8 @@ BuildRequires: cmake
 Source0: http://llvm.org/releases/%{version}/libcxx-%{version}.src.tar.gz
 URL: http://melpon.org/wandbox
 
-%define llvmdir /usr/local/wandbox/llvm-%{version}
-%define _prefix /usr/local/wandbox/libcxx-%{version}
+%define llvmdir /opt/wandbox/llvm-%{version}
+%define _prefix /opt/wandbox/libcxx-%{version}
 %define _configure ../libcxx-%{version}.src/configure
 
 %description

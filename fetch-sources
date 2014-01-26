@@ -20,7 +20,9 @@ fetch() {
 
 (
   success=true
-  cd ~/rpmbuild/SOURCES
+  cd
+  mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+  cd rpmbuild/SOURCES
   for k in ${!SHA1[@]}; do
     f="$(basename "$k")"
     s="${SHA1[$k]}"
@@ -67,6 +69,7 @@ fetch() {
       success=false
       continue
     fi
+    echo "$f: PASSED"
   done
   $success
 )
