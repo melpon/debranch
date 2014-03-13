@@ -12,6 +12,8 @@ MD5['http://downloads.sourceforge.net/project/boost/boost/1.50.0/boost_1_50_0.ta
 MD5['http://downloads.sourceforge.net/project/boost/boost/1.49.0/boost_1_49_0.tar.gz']='e0defc8c818e4f1c5bbb29d0292b76ca'
 MD5['http://downloads.sourceforge.net/project/boost/boost/1.48.0/boost_1_48_0.tar.gz']='313a11e97eb56eb7efd18325354631be'
 MD5['http://downloads.sourceforge.net/project/boost/boost/1.47.0/boost_1_47_0.tar.gz']='ff180a5276bec773a7625cac7e2288e8'
+MD5['http://www.cpan.org/src/5.0/perl-5.18.0.tar.gz']='197ce31e84936bc0a83b03b2ee714cff'
+MD5['http://www.cpan.org/src/5.0/perl-5.19.2.tar.gz']='88d520ae94d4307ccaf655f53612eb33'
 NOVERIFY['wandbox-compilers.list']=''
 NOVERIFY['cabal.config.in']=''
 NOVERIFY['kennel-sqlite.yml']=''
