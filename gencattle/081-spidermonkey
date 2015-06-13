@@ -1,0 +1,30 @@
+#!/bin/bash
+
+cat <<EOF
+{
+  "compilers":[
+EOF
+for c in $(find /opt/wandbox -maxdepth 1 -type d -name "mozjs-*" | sort -V -r); do
+  v=$(cut -d- -f2 <<<$c)
+  cat <<EOF
+    {
+      "name":"mozjs-$v",
+      "displayable":true,
+      "display-name":"SpiderMonkey",
+      "display-compile-command":"js24 prog.js",
+      "language":"JavaScript",
+      "output-file":"prog.js",
+      "output-suffix":".js",
+      "compile-command":"/bin/true",
+      "run-command":["$c/bin/js24", "prog.js"],
+      "version-command":["/bin/sh", "-c", "$c/bin/js24 --help | sed -n '/Version/{s/^[^-]*-.\\\\([^-]*\\\\)-.*$/\\\\1/p;d}'"],
+      "switches":[],
+      "initial-checked":[],
+      "runtime-option-raw":true
+    },
+EOF
+done
+cat <<EOF
+  ]
+}
+EOF

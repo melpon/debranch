@@ -1,14 +1,13 @@
 Summary: boost for wandbox
 Name: wandbox-boost-1.50.0-gcc-4.7.3
 Version: 1.50.0
-Release: 1
+Release: 4
 License: Boost
 Group: wandbox
+Requires: wandbox-boost-headers-%{version}
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: wandbox-gcc-head libbz2-dev python-dev
+BuildRequires: wandbox-gcc-4.7.3 libbz2-dev
 Source0: http://downloads.sourceforge.net/project/boost/boost/1.50.0/boost_1_50_0.tar.gz
-Source1: boost-1.48.0-gcc-head-fix-stdlibcpp3-config.patch
-Source2: boost-1.47.0-gcc-head-fix-stdlibcpp3-config.patch
 URL: http://melpon.org/wandbox
 
 %define _prefix /opt/wandbox/boost-1.50.0-gcc-4.7.3
@@ -21,14 +20,14 @@ a component of wandbox service
 %setup -q -n boost_1_50_0
 
 %build
-cp %{SOURCE1} %{SOURCE2} .
-find . -maxdepth 1 -name 'boost-1.50.0-gcc-4.7.3*.patch' -print0 | xargs -0 cat | patch -p1
-LD_LIBRARY_PATH=%{_gccdir}/lib:%{_gccdir}/lib64 PATH=%{_gccdir}/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games ./bootstrap.sh --prefix=%{_prefix}
-sed "s#using[ 	]*gcc.*;#using gcc : : %{_gccdir}/bin/g++ ;#" -i project-config.jam
-LD_LIBRARY_PATH=%{_gccdir}/lib:%{_gccdir}/lib64 ./b2 stage release link=shared runtime-link=shared --without-mpi %{_smp_mflags}
+PATH=%{_gccdir}/bin:$PATH ./bootstrap.sh --prefix=%{_prefix}
+sed "s#using[ 	]*gcc.*;#using gcc : : %{_gccdir}/bin/g++ : <linkflags>-Wl,-rpath,%{_gccdir}/lib,-rpath,%{_gccdir}/lib64  <cxxflags>-Wno-unused-local-typedefs ;#" -i project-config.jam
+./b2 stage release link=shared runtime-link=shared --without-mpi --without-python --without-test %{_smp_mflags}
 
 %install
-LD_LIBRARY_PATH=%{_prefix}/lib:%{_prefix}/lib64 ./b2 install release link=shared runtime-link=shared --without-mpi --prefix=%{buildroot}%{_prefix}
+./b2 install release link=shared runtime-link=shared --without-mpi --without-python --without-test --prefix=%{buildroot}%{_prefix}
+rm -rf %{buildroot}%{_prefix}/include/*
+ln -s %{_prefix}/../boost-headers-1.50.0/boost %{buildroot}%{_prefix}/include/boost
 rm -rf %{buildroot}%{_prefix}/share
 rm -rf %{buildroot}%{_prefix}/docs
 
@@ -37,10 +36,19 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%{_prefix}/include
+%{_prefix}/include/boost
 %{_prefix}/lib
 
 %changelog
- * Sun Jun 26 2014 kikairoya <kikairoya@gmail.com>
- - Initial build
+* Sat May 16 2015 kikairoya <kikairoya@gmail.com>
+- disable python, test
+
+* Sat Sep 13 2014 kikairoya <kikairoya@gmail.com>
+- warkaround for gcc 5.x
+
+* Fri May 30 2014 kikairoya <kikairoya@gmail.com>
+- Separate headers
+
+* Sun Jan 26 2014 kikairoya <kikairoya@gmail.com>
+- Initial build
 

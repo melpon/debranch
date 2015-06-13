@@ -1,0 +1,30 @@
+#!/bin/bash
+
+cat <<EOF
+{
+  "compilers":[
+EOF
+for c in $(find /opt/wandbox -maxdepth 1 -type d -name "ruby-*" -print | sort -V -r); do
+  v=$(cut -d- -f2 <<<$c)
+  cat <<EOF
+    {
+      "name":"cruby-$v",
+      "displayable":true,
+      "display-name":"CRuby",
+      "display-compile-command":"ruby prog.rb",
+      "language":"Ruby",
+      "output-file":"prog.rb",
+      "output-suffix":".rb",
+      "run-command":["$c/bin/ruby", "prog.rb"],
+      "runtime-option-raw":true,
+      "compile-command":"/bin/true",
+      "version-command":["$c/bin/ruby", "-e", "print RUBY_VERSION"],
+      "switches":[],
+      "initial-checked":[],
+    },
+EOF
+done
+cat <<EOF
+  ]
+}
+EOF

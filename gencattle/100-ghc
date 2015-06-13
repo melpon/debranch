@@ -1,0 +1,33 @@
+#!/bin/bash
+
+cat <<EOF
+{
+  "compilers":[
+EOF
+for c in $(find /opt/wandbox -maxdepth 1 -type d -name "ghc-*" | sort -V -r); do
+  v=$(cut -d- -f2 <<<$c)
+  cat <<EOF
+    {
+      "name":"ghc-$v",
+      "displayable":true,
+      "display-name":"GHC",
+      "display-compile-command":"ghc prog.hs",
+      "language":"Haskell",
+      "output-file":"prog.hs",
+      "output-suffix":".hs",
+      "compile-command":["$c/bin/ghc", "-o", "prog.exe", "prog.hs"],
+      "run-command":"./prog.exe",
+      "version-command":["$c/bin/ghc", "--numeric-version"],
+      "switches":[
+        {"name":"haskell-warning","display-name":"Warnings","values":"-Wall"},
+        {"name":"haskell-optimize","display-name":"Optimize","values":"-O2"},
+      ],
+      "initial-checked":["haskell-warning", "haskell-optimize"],
+      "compile-option-raw":true
+    },
+EOF
+done
+cat <<EOF
+  ]
+}
+EOF

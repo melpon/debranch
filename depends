@@ -4,5 +4,7 @@ rpm
 alien
 realpath
 git
-svn
+subversion
 wget
+curl
+libtool

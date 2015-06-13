@@ -1,3 +1,17 @@
 SPECs for Wandbox's compiler packages
 
 This project provides RPM SPEC files for compilers used by the Wandbox service.
+
+howto:
+
+1. install Ubuntu 12.04LTS
+ do it your way
+
+2. install dependency packages
+ $ sudo apt-get install $(< depends)
+ 
+3. build it
+ $ ./build-all-packages
+ * notice
+   It may take more than a few days.
+   If your disk free space has less than 200GiB, add '-c' to clean built files at end of each build.

@@ -1,8 +1,12 @@
 #!/bin/bash
 
 declare -A SHA1
+declare -A SHA256
 declare -A MD5
+declare -A GPG
 declare -A NOVERIFY
+declare -A SITE
+declare -A SVN
 
 srcdir=$(realpath "$(dirname "$0")")
 . sources.list
@@ -11,15 +15,32 @@ cksum() {
   echo "$2  $3" | ${1}sum --check
 }
 fetch() {
-  if echo "$1" | grep -q '://'; then
-    wget "$1"
+  local site="${SITE[$1]:-$1}"
+  if echo "$site" | grep -q '://'; then
+    curl -L "$site" -o "$(basename "$1")"
+  elif [[ -n "${SVN[$1]}" ]]; then
+    if ! [[ -f "$1" ]]; then
+      local r="${SVN[$1]}"
+      local d="$(mktemp -d)"
+      ( cd "$d" && svn export -q "$r" "$(echo $(basename "$1") | sed 's/\.tar\(\.gz\|\.bz2\|\.Z\|\.xz\|\.lzma\)\?$//')" && tar caf "$1" * ) && \
+      mv "$d/$1" . && \
+      mv -rf "$d"
+    fi
   else
     cp "$srcdir/sources/$1" .
   fi
 }
+gpg_wrap() {
+  gpg --no-options --homedir "$srcdir/pubkeys" --no-permission-warning "$@"
+}
 
 (
+  trap "exit 1" SIGTERM
+  trap "exit 1" SIGQUIT
   success=true
+  for f in "$srcdir"/pubkeys/*.asc; do
+    gpg_wrap --import $f
+  done
   cd
   mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
   cd rpmbuild/SOURCES
@@ -36,6 +57,24 @@ fetch() {
       continue
     fi
     if ! cksum sha1 "$s" "$f"; then
+      echo "checksum unmatch: $k" >&2
+      success=false
+      continue
+    fi
+  done
+  for k in ${!SHA256[@]}; do
+    f="$(basename "$k")"
+    s="${SHA256[$k]}"
+    if [ -f "$f" ] && cksum sha256 "$s" "$f"; then
+      continue
+    fi
+    rm -f "$f"
+    if ! fetch "$k"; then
+      echo "failed to download: $k" >&2
+      success=false
+      continue
+    fi
+    if ! cksum sha256 "$s" "$f"; then
       echo "checksum unmatch: $k" >&2
       success=false
       continue
@@ -59,11 +98,27 @@ fetch() {
       continue
     fi
   done
-  for k in ${!NOVERIFY[@]}; do
+  for k in ${!GPG[@]}; do
     f="$(basename "$k")"
-    if [ -f "$f" ]; then
+    s="${GPG[$k]:-.sig}"
+    if [ -f "$f" -a -s "$f$s" ] && gpg_wrap --verify "$f$s" 2> /dev/null; then
+      echo "$f: OK"
       continue
     fi
+    rm -f "$f"
+    if ! fetch "$k" || ! fetch "$k$s" ; then
+      echo "failed to download: $k" >&2
+      success=false
+      continue
+    fi
+    if ! gpg_wrap --verify "$f$s" ; then
+      echo "signature unmatch: $k" >&2
+      success=false
+      continue
+    fi
+  done
+  for k in ${!NOVERIFY[@]}; do
+    f="$(basename "$k")"
     if ! fetch "$k"; then
       echo "failed to download: $k" >&2
       success=false

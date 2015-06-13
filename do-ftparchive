@@ -1,0 +1,18 @@
+#!/bin/bash
+
+found=false
+arch=""
+
+for f in *.deb; do
+  dpkg-sig --sign builder "$f"
+  found=true
+  if [[ -z "$arch" ]]; then
+    arch=$(dpkg-deb -f $f Architecture)
+  fi
+done
+$found && (
+  apt-ftparchive packages . > Packages
+  apt-ftparchive contents . > Contents-$arch
+  apt-ftparchive release . > Release
+  gpg --sign -b -a -o Release.gpg Release
+)

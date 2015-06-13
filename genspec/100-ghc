@@ -1,0 +1,121 @@
+#!/bin/bash
+
+cd "$(dirname "$0")"
+for ver in $(cat ../series/* | sed -n 's#wandbox-ghc-\([0-9]\+\.[0-9]\+\.[0-9]\+\)#\1#gp'); do
+  cat > ../specs/wandbox-ghc-$ver.spec <<EOF
+Summary: ghc for wandbox
+Name: wandbox-ghc-$ver
+Version: $ver
+Release: 2
+License: ?
+Group: wandbox
+BuildRoot: %{_tmppath}/%{name}-head-%{release}-buildroot
+BuildRequires: libgmp-dev ghc libffi-dev xsltproc libncurses5-dev
+Source0: http://www.haskell.org/ghc/dist/%{version}/ghc-%{version}-src.tar.bz2
+URL: http://melpon.org/wandbox
+
+%define _prefix /opt/wandbox/ghc-%{version}
+
+%description
+a component of wandbox service
+
+%prep
+%setup -q -n ghc-%{version}
+
+%build
+cat > mk/build.mk <<EOT
+docdir = %{_defaultdocdir}/ghc
+htmldir = %{_defaultdocdir}/ghc
+BUILD_DOCBOOK_PDF = NO
+BUILD_DOCBOOK_PS = NO
+BUILD_DOCBOOK_HTML = NO
+HADDOCK_DOCS = NO
+SRC_HC_OPTS+=-w
+INTEGER_LIBRARY=integer-gmp
+SRC_CC_OPTS+=%{optflags}
+EOT
+./configure --prefix=%{_prefix} --libdir=%{_libdir}
+%{__make} %{_smp_mflags}
+
+%install
+%{make_install}
+rm -rf %{buildroot}%{_datadir}
+rm -rf %{buildroot}%{_mandir}
+binprefix=\$(sh config.guess)
+for f in \$(find '%{buildroot}%{_bindir}' -name "\$binprefix-*"); do
+  ln -s \$(basename "$f") \$(echo "\$f" | sed 's/\$binprefix-//')
+done
+
+%clean
+rm -rf %{buildroot}
+
+%files
+%defattr(-,root,root,-)
+%{_bindir}
+%{_libdir}
+
+%changelog
+* Sat Jun 6 2015 kikairoya <kikairoya@gmail.com>
+- use generator
+
+* Tue Jan 28 2014 kikairoya <kikairoya@gmail.com>
+- Initial build
+EOF
+done
+
+
+for ver in $(cat ../series/* | sed -n 's#wandbox-haskell-platform-\(.*\)-ghc-\(.*\)#\1,\2#gp'); do
+  hpver=$(echo $ver | cut -d, -f1)
+  ghcver=$(echo $ver | cut -d, -f2)
+  cat > ../specs/wandbox-haskell-platform-$hpver-ghc-$ghcver.spec <<EOF
+%define _ghcver $ghcver
+Summary: haskell platform for wandbox
+Name: wandbox-haskell-platform-$hpver-ghc-$ghcver
+Version: $hpver
+Release: 2
+License: ?
+Group: wandbox
+BuildRoot: %{_tmppath}/%{name}-head-%{release}-buildroot
+Requires: wandbox-ghc-%{version}
+BuildRequires: libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev
+Source0: http://www.haskell.org/platform/download/%{version}/haskell-platform-%{version}.tar.gz
+Source1: haskell-platform-install.patch
+URL: http://melpon.org/wandbox
+
+%define _prefix /opt/wandbox/ghc-%{_ghcver}
+
+%description
+a component of wandbox service
+
+%prep
+%setup -q -n haskell-platform-%{version}
+patch -p1 < %{SOURCE1}
+
+%build
+%{configure} --with-ghc=%{_bindir}/ghc --with-ghc-pkg=%{_bindir}/ghc-pkg
+%{__make} %{_smp_mflags}
+
+%install
+%{make_install}
+rm -rf %{buildroot}%{_datadir}
+rm -rf %{buildroot}%{_mandir}
+rm -rf %{buildroot}%{_prefix}/share
+rm -rf %{buildroot}/load
+
+%clean
+rm -rf %{buildroot}
+
+%files
+%defattr(-,root,root,-)
+%{_prefix}/bin
+%{_prefix}/lib
+
+
+%changelog
+* Sat Jun 6 2015 kikairoya <kikairoya@gmail.com>
+- use generator
+
+* Tue Jan 28 2014 kikairoya <kikairoya@gmail.com>
+- Initial build
+EOF
+done

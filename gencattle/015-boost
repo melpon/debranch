@@ -1,0 +1,48 @@
+#!/bin/bash
+
+cat <<EOF
+{
+  "compilers":[
+EOF
+for c in gcc clang; do
+  for g in $(find /opt/wandbox -maxdepth 1 -type d -name "$c-*" -print | sort -V -r); do
+    v=$(echo $g | cut -d- -f2)
+    defboost=""
+    cat <<EOF
+    {
+      "name":"boost-$c-$v",
+      "displayable":false,
+      "append-to":"$c-$v",
+      "switches":[
+        {"name":"boost","display-name":"Boost","flags":[
+EOF
+    for d in $(find /opt/wandbox -maxdepth 1 -type d -name "boost-*-$c-$v" -print | sort -V -r) ; do
+      boostver=$(echo $d | cut -d- -f2)
+      cat <<EOF
+          {"name":"boost-$boostver","display-flags":"-I$d/include","values":[
+            "-L$d/lib","-Wl,-rpath,$d/lib",
+EOF
+      for l in $(find $d/lib -type f -printf '%f\n' | cut -d. -f1 | sort | uniq | sed 's/^lib/-l/g'); do
+        cat <<EOF
+            "$l",
+EOF
+      done
+      cat <<EOF
+            "-I$d/include"]},
+EOF
+      if [[ -z "$defboost" ]]; then
+        defboost="\"boost-$boostver\""
+      fi
+    done
+    cat <<EOF
+          {"name":"boost-none","values":[]}]
+        }],
+      "initial-checked":[${defboost:-"boost-none"}]
+    },
+EOF
+  done
+done
+cat <<EOF
+  ]
+}
+EOF

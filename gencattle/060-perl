@@ -1,0 +1,30 @@
+#!/bin/bash
+
+cat <<EOF
+{
+  "compilers":[
+EOF
+for c in $(find /opt/wandbox -maxdepth 1 -type d -name "perl-*" -print | sort -V -r); do
+  v=$(cut -d- -f2 <<<$c)
+  cat <<EOF
+    {
+      "name":"perl-$v",
+      "displayable":true,
+      "display-name":"Perl",
+      "display-compile-command":"perl prog.pl",
+      "language":"Perl",
+      "output-file":"prog.pl",
+      "output-suffix":".pl",
+      "run-command":["$c/bin/perl", "prog.pl"],
+      "runtime-option-raw":true,
+      "compile-command":"/bin/true",
+      "version-command":["$c/bin/perl", "-e", "print \$^V"],
+      "switches":[],
+      "initial-checked":[],
+    },
+EOF
+done
+cat <<EOF
+  ]
+}
+EOF

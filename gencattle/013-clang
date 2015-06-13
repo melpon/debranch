@@ -1,0 +1,69 @@
+#!/bin/bash
+
+cat <<EOF
+{
+  "compilers":[
+    {
+      "name":"clang-common",
+      "displayable":false,
+      "display-name":"clang",
+      "display-compile-command":"clang++ prog.cc",
+      "language":"C++",
+      "output-file":"prog.cc",
+      "output-suffix":".cc",
+      "run-command":"./prog.exe"
+EOF
+for c in $(find /opt/wandbox -maxdepth 1 -type d -name "llvm-*" -print | sort -V -r); do
+  v=$(cut -d- -f2 <<<$c)
+  defstd=""
+  cat <<EOF
+    }, {
+      "name":"clang-$v",
+      "displayable":true,
+      "compiler-option-raw":true,
+      "compile-command":[
+        "$c/bin/clang++",
+        "-oprog.exe",
+        "-stdlib=libc++",
+        "-Wl,-rpath,$c/lib",
+        "-lpthread",
+        "prog.cc"
+      ],
+      "version-command":["/bin/sh", "-c", "$c/bin/clang++ --version | head -1 | cut -d' ' -f3-"],
+      "switches":[
+        {"name":"warning","display-name":"Warnings","values":["-Wall","-Wextra"]},
+        {"name":"optimize","display-name":"Optimization","values":["-O2","-march=native"]},
+        {"name":"cpp-verbose","display-name":"Verbose","values":["-v"]},
+        {"name":"cpp-pedantic","display-name":"Pedantic","flags":[
+          {"name":"cpp-pedantic-none","display-name":"no pedantic","values":[]},
+          {"name":"cpp-pedantic","display-name":"-pedantic","values":"-pedantic"},
+          {"name":"cpp-pedantic-errors","display-name":"-pedantic-errors","values":"-pedantic-errors"},
+        ]},
+        {"name":"cxxmode","display-name":"Mode","flags":[
+EOF
+  for s in "17 1z" "14 1y" "11 0x" 98; do
+    for ss in $s; do
+      if $c/bin/clang++ -o /dev/null -c -xc++ -std=c++$ss /dev/null 2> /dev/null > /dev/null; then
+		cat <<EOF
+          {"name":"gnu++$ss","values":"-std=gnu++$ss"},
+          {"name":"c++$ss","values":"-std=c++$ss"},
+EOF
+        if [[ -z "$defstd" ]]; then
+          defstd="\"gnu++$ss\""
+        fi
+        break
+      fi
+    done
+  done
+  cat <<EOF
+        ]},
+      ],
+      "initial-checked":["warning", "cpp-pedantic-none", $defstd],
+      "inherits":"clang-common"
+EOF
+done
+cat <<EOF
+    }
+  ]
+}
+EOF

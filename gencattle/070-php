@@ -1,0 +1,30 @@
+#!/bin/bash
+
+cat <<EOF
+{
+  "compilers":[
+EOF
+for c in $(find /opt/wandbox -maxdepth 1 -type d -name "php-*" -print | sort -V -r); do
+  v=$(cut -d- -f2 <<<$c)
+  cat <<EOF
+    {
+      "name":"php-$v",
+      "displayable":true,
+      "display-name":"PHP",
+      "display-compile-command":"php prog.php",
+      "language":"PHP",
+      "output-file":"prog.php",
+      "output-suffix":".php",
+      "run-command":["$c/bin/php", "prog.php"],
+      "runtime-option-raw":true,
+      "compile-command":"/bin/true",
+      "version-command":["/bin/sh", "-c", "$c/bin/php -v | head -1 | cut -d' ' -f2"],
+      "switches":[],
+      "initial-checked":[],
+    },
+EOF
+done
+cat <<EOF
+  ]
+}
+EOF

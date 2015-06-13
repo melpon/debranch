@@ -1,0 +1,30 @@
+#!/bin/bash
+
+cat <<EOF
+{
+  "compilers":[
+EOF
+for c in $(find /opt/wandbox -maxdepth 1 -type d -name "lua-*" | sort -V -r); do
+  v=$(cut -d- -f2 <<<$c)
+  cat <<EOF
+    {
+      "name":"lua-$v",
+      "displayable":true,
+      "display-name":"Lua",
+      "display-compile-command":"lua prog.lua",
+      "language":"Lua",
+      "output-file":"prog.lua",
+      "output-suffix":".lua",
+      "compile-command":"/bin/true",
+      "run-command":["$c/bin/lua", "prog.lua"],
+      "version-command":["/bin/sh", "-c", "$c/bin/lua -v | cut -d' ' -f2"],
+      "switches":[],
+      "initial-checked":[],
+      "runtime-option-raw":true
+    },
+EOF
+done
+cat <<EOF
+  ]
+}
+EOF

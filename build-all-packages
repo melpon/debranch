@@ -1,15 +1,141 @@
 #!/bin/sh
 
-set -e
+export TZ=Etc/UTC
+export LANG=C
+unset LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION LC_ALL
+nodownload=false
+skiphead=false
+all=false
+clean=""
+keep=false
+opt="$1"
+pass=""
+roomba=false
+headdate=$(date +%Y%m%d)
+
+while [ -n "$opt" ]; do
+  true
+  case "$opt" in
+  -h|--h|--he|--hel|--help)
+    echo "usage: $0 [--skip-head] [--all] [--clean] [--keep-going] [--head-date=\$(date +%Y%m%d)] [--nodownload] [--roomba] [--pass=pkg,pkg,...]"
+    exit
+    ;;
+  -n|--n|--no|--nod|--nodo|--nodow|--nodown|--nodownl|--nodownlo|--nodownloa|--nodownload)
+    nodownload=true
+    shift
+    ;;
+  -s|--s|--sk|--ski|--skip|--skip-|--skip-h|--skip-he|--skip-hea|--skip-head|--skip-heads)
+    skiphead=true
+    shift
+    ;;
+  -a|--a|--al|--all)
+    all=true
+    shift
+    ;;
+  -c|--c|--cl|--cle|--clea|--clean)
+    clean=-c
+    shift
+    ;;
+  -k|--k|--ke|--kee|--keep|--keep-|--keep-g|--keep-go|--keep-goi|--keep-goin|--keep-going)
+    keep=true
+    shift
+    ;;
+  -p|--p|--pa|--pas|--pass|--p=*|--pa=*|--pas=*|--pass=*)
+    if echo $1 | grep -q =; then
+      pass="$pass $(echo "$1" | cut -d= -f2 | sed 's/,/ /g')"
+    else
+      pass="$pass $(echo "$2" | sed 's/,/ /g')"
+      shift
+    fi
+    shift
+    ;;
+  -r|--r|--ro|--roo|--room|--roomb|--roomba)
+    roomba=true
+    shift
+    ;;
+  -h|--h|--he|--hea|--head|--head-|--head-d|--head-da|--head-dat|--head-date|--h=*|--he=*|--hea=*|--head=*|--head-=*|--head-d=*|--head-da=*|--head-dat=*|--head-date=*)
+    if echo $1 | grep -q =; then
+      headdate="$(echo "$1" | cut -d= -f2)"
+    else
+      headdate="$2"
+      shift
+    fi
+    shift
+  esac
+  opt="$1"
+done
+
+faillist=""
+post_fail() {
+  if $keep; then
+    faillist="$faillist $1"
+  else
+    echo "failed to build package $2: $1"
+  fi
+  false
+}
+test_need_to_build() {
+  # $0 pkgname pkgver pkgrel
+  local oldver="$(dpkg-query -W -f '${Version}' "$1" 2> /dev/null)"
+  if ( echo $1 | grep -q ".-head\|.-maint" ) && date -d "$2" + > /dev/null 2> /dev/null; then
+    if $skiphead; then
+      return 1
+    fi
+    if dpkg --compare-versions "$oldver" ge "${headdate}-$3"; then
+      return 1
+    fi
+  elif dpkg --compare-versions "$oldver" ge "$2-$3"; then
+    return 1
+  fi
+  return 0
+}
+$keep || set -e
 cd "$(dirname "$0")"
-./fetch-sources
-./gen-boost-spec
-for pkg in $(cat series); do
+if $roomba; then
+  rm -rf $(rpm --eval='%{_builddir} %{_buildrootdir} %{_rpmdir} %{_specdir} %{_srcrpmdir}')
+  mkdir -p $(rpm --eval='%{_builddir} %{_buildrootdir} %{_rpmdir} %{_specdir} %{_srcrpmdir}')
+fi
+$nodownload || ./fetch-sources
+echo -n "generating specs"
+for genspec in genspec/*; do
+  echo -n "."
+  $genspec
+done
+echo "done"
+for pkg in $(cat series/*); do
+  echo -n "preparing for $pkg..."
+  if [ -z "$pkg" ] || (echo " $pass " | grep -q " $pkg "); then
+    echo " skip."
+    continue
+  fi
+  echo
+  if [ ! -f "specs/$pkg.spec" ]; then
+    post_fail $pkg "spec does not exist"
+    $keep && continue || break
+  fi
+  if ! rpmspec --srpm -q specs/$pkg.spec --qf "%{NAME}%{VERSION}%{RELEASE}" > /dev/null 2> /dev/null; then
+    post_fail $pkg "(malformed SPEC file)"
+    $keep && continue || break
+  fi
   pkgname="$(rpmspec --srpm -q specs/$pkg.spec --qf "%{NAME}")"
   pkgver="$(rpmspec --srpm -q specs/$pkg.spec --qf "%{VERSION}")"
   pkgrel="$(rpmspec --srpm -q specs/$pkg.spec --qf "%{RELEASE}")"
-  if dpkg --compare-versions "$(dpkg-query -W -f '${Version}' "${pkgname}" 2> /dev/null)" lt "${pkgver}-${pkgrel}"; then
-    ./build-deb-from-spec specs/$pkg.spec
-    sudo dpkg -i "${pkgname}_${pkgver}-${pkgrel}_$(dpkg-architecture -c 'echo $DEB_HOST_ARCH').deb"
+  if $all || test_need_to_build $pkgname $pkgver $pkgrel; then
+    mkdir -p buildlog
+    if ./build-deb-from-spec specs/$pkg.spec $clean 2>&1 | tee buildlog/$pkg.log; then
+      if ! sudo dpkg -i "deb/${pkgname}_${pkgver}-${pkgrel}_$(dpkg-architecture -c 'echo $DEB_HOST_ARCH').deb"; then
+        post_fail $pkg "(alien failed)"
+        $keep || break
+      fi
+    else
+      post_fail $pkg
+      $keep || break
+    fi
   fi
 done
+
+if [ -n "$faillist" ]; then
+  echo "failed to build package(s):"
+  echo "$faillist"
+  false
+fi

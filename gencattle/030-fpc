@@ -1,0 +1,36 @@
+#!/bin/bash
+
+cat <<EOF
+{
+  "compilers":[
+EOF
+for c in $(find /opt/wandbox -maxdepth 1 -type d -name "fpc-*" -print | sort -V -r); do
+  v=$(cut -d- -f2 <<<$c)
+  cat <<EOF
+    {
+      "name":"fpc-$v",
+      "displayable":true,
+      "display-name":"FreePascal",
+      "display-compile-command":"fpc prog.pas",
+      "language":"Pascal",
+      "output-file":"prog.pas",
+      "output-suffix":".pas",
+      "run-command":"./prog",
+      "compiler-option-raw":true,
+      "compile-command":[
+        "$c/bin/fpc",
+        "-Fu$c/lib/fpc/$v/units/x86_64-linux/*",
+        "prog.pas"
+      ],
+      "version-command":["/bin/sh", "-c", "$g/bin/fpc | head -1 | cut -d' ' -f5"],
+      "switches":[
+        {"name":"delphi-mode","display-name": "Delphi 7 mode","values":"-Mdelphi"}
+      ],
+      "initial-checked":[],
+    },
+EOF
+done
+cat <<EOF
+  ]
+}
+EOF

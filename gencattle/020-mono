@@ -1,0 +1,43 @@
+#!/bin/bash
+
+cat <<EOF
+{
+  "compilers":[
+    {
+      "name":"mono-common",
+      "displayable":false,
+      "display-name":"mono",
+      "display-compile-command":"mcs prog.cs",
+      "language":"C#",
+      "output-file":"prog.cs",
+      "output-suffix":".cs",
+EOF
+for c in $(find /opt/wandbox -maxdepth 1 -type d -name "mono-*" -print | sort -V -r); do
+  v=$(cut -d- -f2 <<<$c)
+  cat <<EOF
+    }, {
+      "name":"mono-$v",
+      "displayable":true,
+      "compiler-option-raw":true,
+      "compile-command":[
+        "$c/bin/mcs",
+        "-out:prog.exe",
+        "-target:exe",
+        "prog.cs"
+      ],
+      "run-command":["$c/bin/mono", "./prog.exe"],
+      "version-command":["/bin/sh", "-c", "$c/bin/mcs --version | cut -d' ' -f5"],
+      "switches":[
+        {"name":"optimize","display-name":"Optimization","values":"-o+"},
+        {"name":"optimize-jit","display-name":"JIT Optimization","values":"--optimize=all","runtime":true,"insert-position":1},
+        {"name":"boehm-gc","display-name":"Use Boehm GC","values":"--gc=boehm","runtime":true},
+      ],
+      "initial-checked":["optimize","optimize-jit"],
+      "inherits":"mono-common"
+EOF
+done
+cat <<EOF
+    }
+  ]
+}
+EOF

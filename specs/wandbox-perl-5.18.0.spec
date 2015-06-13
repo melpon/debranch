@@ -2,39 +2,41 @@ Summary: perl for wandbox
 Name: wandbox-perl-5.18.0
 Version: 5.18.0
 Release: 1
-License: GPL
+License: GPL1+
 Group: wandbox
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-# BuildRequires:
+Requires: perl
+BuildRequires: libdb-dev libgdbm-dev netbase zlib1g-dev libbz2-dev
 Source0: http://www.cpan.org/src/5.0/perl-%{version}.tar.gz
 URL: http://melpon.org/wandbox
 
 %define _prefix /opt/wandbox/perl-%{version}
-%global __os_install_post %{nil}
 
 %description
 a component of wandbox service
 
 %prep
-%setup -q -c -T -a 0
+%setup -q -n perl-%{version}
 
 %build
-cd perl-%{version}
 ./Configure -des -Dprefix=%{_prefix}
-%{__make}
+%{__make} %{_smp_mflags}
 
 %install
-cd perl-%{version}
 %{make_install}
+rm -rf %{buildroot}%{_prefix}/share
+rm -rf %{buildroot}%{_prefix}/man
+chmod -R +w %{buildroot}%{_prefix}
 
 %clean
 rm -rf %{buildroot}
 
 %files
-%defattr(-,root,root,-)
-%{_prefix}
+%defattr(755,root,root,755)
+%{_bindir}
+%{_prefix}/lib
 
 %changelog
- * Fri Mar 14 2014 melpon <shigemasa7watanabe@gmail.com>
+ * Mon Jan 27 2014 kikairoya <kikairoya@gmail.com>
  - Initial build
 

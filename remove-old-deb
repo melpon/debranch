@@ -1,0 +1,30 @@
+#!/bin/bash
+
+if [[ -n "$1" ]]; then
+  cd "$1"
+else
+  cd "$(dirname "$0")"
+  cd deb
+fi
+
+declare -A debs
+arch="$(dpkg --print-architecture)"
+
+for f in *$arch.deb; do
+  pkgname="$(dpkg-deb -f "$f" Package)"
+  debs[$pkgname]="${debs[$pkgname]} $(dpkg-deb -f "$f" Version)"
+done
+
+for k in ${!debs[@]}; do
+  newest=""
+  for v in ${debs[$k]}; do
+    if [[ -z "$newest" ]]; then
+	  newest="$v"
+	elif dpkg --compare-versions "$newest" le "$v"; then
+	  rm "${k}_${newest}_${arch}.deb"
+	  newest="$v"
+	else
+	  rm "${k}_${v}_${arch}.deb"
+	fi
+  done
+done

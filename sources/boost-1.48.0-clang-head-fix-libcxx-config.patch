@@ -1,0 +1,11 @@
+--- boost_1_48_0/boost/config/stdlib/libcpp.hpp	2011-04-25 21:10:48.000000000 +0900
++++ boost_1_55_0/boost/config/stdlib/libcpp.hpp	2014-02-17 23:47:25.044764266 +0900
+@@ -33,4 +33,8 @@
+ // libc++ uses a non-standard messages_base
+ #define BOOST_NO_STD_MESSAGES
+ 
++#if _LIBCPP_VERSION < 1002 
++#   define BOOST_NO_CXX11_NUMERIC_LIMITS 
++#endif 
++
+ //  --- end ---

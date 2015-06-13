@@ -3,4 +3,4 @@ start on runlevel [2345]:
 stop on runlevel [!2345]:
 respawn
 chdir /
-exec env - su cattleshed -c @@bindir@@/cattlegrid
+exec env - su cattleshed -c @@bindir@@/cattleshed

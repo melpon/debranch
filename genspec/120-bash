@@ -1,0 +1,54 @@
+#!/bin/bash
+
+cd "$(dirname "$0")"
+for ver in $(cat ../series/* | sed -n 's#wandbox-bash-\([0-9]\+\.[0-9]\+\.[0-9]\+\)#\1#gp'); do
+  majorver=$(echo $ver | cut -d. -f1)
+  minorver=$(echo $ver | cut -d. -f2)
+  patchver=$(echo $ver | cut -d. -f3)
+  cat > ../specs/wandbox-bash-$ver.spec <<EOF
+Summary: bash for wandbox
+Name: wandbox-bash-$ver
+Version: $ver
+Release: 2
+License: GPL
+Group: wandbox
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+Source0: http://ftp.gnu.org/gnu/bash/bash-$majorver.$minorver.tar.gz
+$(for (( i=1; i<$(expr 1 + $patchver); ++i )); do echo "Source$i: http://ftp.gnu.org/gnu/bash/bash-$majorver.$minorver-patches/bash$majorver$minorver-$(printf "%03d" $i)"; done)
+URL: http://melpon.org/wandbox
+
+%define _prefix /opt/wandbox/bash-$ver
+%define _sysconfdir %{_prefix}/etc
+
+%description
+a component of wandbox service
+
+%prep
+%setup -q -n bash-$majorver.$minorver
+$(for (( i=1; i<$(expr 1 + $patchver); ++i )); do echo "patch -p0 < %{SOURCE$i}"; done)
+
+%build
+export CFLAGS="\$CFLAGS -DSYS_BASHRC=\\"\\\\\\"%{_sysconfdir}/bash.bashrc\\\\\\"\\" -DSYS_BASH_LOGOUT=\\"\\\\\\"%{_sysconfdir}/bash.bash_logout\\\\\\"\\""
+%{configure} --without-curses --without-readline --without-bash-malloc
+%{__make} %{_smp_mflags}
+
+%install
+%{make_install}
+rm -rf %{buildroot}%{_prefix}/share
+rm -rf %{buildroot}/usr/share
+
+%clean
+rm -rf %{buildroot}
+
+%files
+%defattr(755,root,root,755)
+%{_bindir}
+
+%changelog
+* Sat Jun 6 2015 kikairoya <kikairoya@gmail.com>
+- use generator
+
+* Sun Jun 15 2014 kikairoya <kikairoya@gmail.com>
+- Initial build
+EOF
+done

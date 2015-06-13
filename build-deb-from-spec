@@ -1,21 +1,48 @@
 #!/bin/bash
 
-if [ ! -f "$1" ]; then
-  echo usage: "$0" '{specfile}'
+set -e
+
+spec=
+clean=false
+
+while [ -n "$1" ]; do
+  case "$1" in
+  -c)
+    clean=true
+    ;;
+  *)
+    spec="$(realpath "$1")"
+    ;;
+  esac
+  shift
+done
+
+if [ ! -f "$spec" ]; then
+  echo usage: "$0 [-c] {specfile}"
   exit 1
 fi
 
-set -e
-deps="$(rpmspec --srpm -q "$1" --qf '[%{REQUIRENAME} ]')"
-manualinstalled="$(apt-mark showmanual $deps)"
+deps="$(echo $(rpmspec --srpm -q "$spec" --qf '[%{REQUIRENAME} ]'))"
+manualinstalled="$(echo $(apt-mark showmanual $deps))"
+pkgname="$(rpmspec --srpm -q "$spec" --qf "%{NAME}")"
+pkgver="$(rpmspec --srpm -q "$spec" --qf "%{VERSION}")"
+pkgrel="$(rpmspec --srpm -q "$spec" --qf "%{RELEASE}")"
+pkgarch="$(rpmspec --srpm -q "$spec" --qf "%{ARCH}")"
 if [ $(echo "$deps" | wc -w) -ge 1 ]; then
   sudo sh -ec "
-    apt-get install $deps
+    apt-get install -y $deps
     apt-mark auto $deps
     if [ $(echo "$manualinstalled" | wc -w) -ge 1 ]; then
       apt-mark manual $manualinstalled
     fi
   "
 fi
-rpmbuild -ba "$1" --nodeps
-fakeroot alien -k --scripts ~/rpmbuild/RPMS/$(rpmspec --srpm -q "$1" --qf '%{ARCH}')/$(rpmspec --srpm -q "$1" --qf '%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}.rpm')
+rpmbuild -bb "$spec" --nodeps
+mkdir -p deb
+(
+  cd deb;
+  fakeroot alien -k --scripts ~/rpmbuild/RPMS/$pkgarch/$pkgname-$pkgver-$pkgrel.$pkgarch.rpm
+)
+if $clean; then
+  rpmbuild --nodeps --clean "$spec"
+fi

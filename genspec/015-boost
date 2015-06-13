@@ -1,0 +1,206 @@
+#!/bin/bash
+
+cd "$(dirname "$0")"
+
+for pkg in $(cat ../series/* | sed -n 's#wandbox-boost-headers-\(.*\)#\1#gp'); do
+  boostver=$pkg
+  boostver_tarname=$(echo $boostver | sed 's/\./_/g')
+  cat > ../specs/wandbox-boost-headers-$boostver.spec <<EOF
+Summary: boost headers for wandbox
+Name: wandbox-boost-headers-$boostver
+Version: $boostver
+Release: 1
+License: Boost
+Group: wandbox
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+Source0: http://downloads.sourceforge.net/project/boost/boost/$boostver/boost_$boostver_tarname.tar.gz
+URL: http://melpon.org/wandbox
+
+%define _prefix /opt/wandbox/boost-headers-$boostver
+
+%description
+a component of wandbox service
+
+%prep
+%setup -q -n boost_$boostver_tarname
+
+%build
+
+%install
+mkdir -p %{buildroot}%{_prefix}/docs
+rsync -a boost %{buildroot}%{_prefix}/
+install -c -m 644 LICENSE_1_0.txt %{buildroot}%{_prefix}/docs/
+
+%clean
+rm -rf %{buildroot}
+
+%files
+%defattr(-,root,root,-)
+%{_prefix}/boost
+%{_prefix}/docs/LICENSE_1_0.txt
+
+%changelog
+ * Fri May 30 2014 kikairoya <kikairoya@gmail.com>
+ - Separate headers
+
+EOF
+done
+
+
+for pkg in $(cat ../series/* | sed -n 's#wandbox-boost-\(.*\)-gcc-\(.*\)#\1,\2#gp'); do
+  boostver=$(echo $pkg | cut -d, -f1)
+  gccver=$(echo $pkg | cut -d, -f2)
+  boostver_tarname=$(echo $boostver | sed 's/\./_/g')
+  withouts="--without-mpi --without-python --without-test"
+  addflags=
+  if [ "$gccver" = "head" ]; then
+    addflags="<cxxflags>-std=gnu++11 <cxxflags>-Wno-unused-local-typedefs <cxxflags>-Wno-deprecated-declarations"
+  else
+    if [ "$gccver" ">" "4.7" ]; then
+      addflags="$addflags <cxxflags>-Wno-unused-local-typedefs"
+    fi
+    if [ "$gccver" ">" "4.8.0" ]; then
+      addflags="$addflags <cxxflags>-std=gnu++11"
+    fi
+    if [ "$gccver" ">" "5.0.0" ]; then
+      addflags="$addflags <cxxflags>-Wno-deprecated-declarations"
+    fi
+    if [ "4.8" "<" "$gccver" -a "$gccver" "<" "4.9.0" -a "$boostver" "=" "1.58.0" ]; then
+      withouts="$withouts --without-context --without-coroutine"
+    fi
+  fi
+  cat > ../specs/wandbox-boost-$boostver-gcc-$gccver.spec <<EOF
+Summary: boost for wandbox
+Name: wandbox-boost-$boostver-gcc-$gccver
+Version: $boostver
+Release: 4
+License: Boost
+Group: wandbox
+Requires: wandbox-boost-headers-%{version}
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+BuildRequires: wandbox-gcc-$gccver libbz2-dev
+Source0: http://downloads.sourceforge.net/project/boost/boost/$boostver/boost_$boostver_tarname.tar.gz
+URL: http://melpon.org/wandbox
+
+%define _prefix /opt/wandbox/boost-$boostver-gcc-$gccver
+%define _gccdir /opt/wandbox/gcc-$gccver
+
+%description
+a component of wandbox service
+
+%prep
+%setup -q -n boost_$boostver_tarname
+
+%build
+PATH=%{_gccdir}/bin:\$PATH ./bootstrap.sh --prefix=%{_prefix}
+sed "s#using[ 	]*gcc.*;#using gcc : : %{_gccdir}/bin/g++ : <linkflags>-Wl,-rpath,%{_gccdir}/lib,-rpath,%{_gccdir}/lib64 $addflags ;#" -i project-config.jam
+./b2 stage release link=shared runtime-link=shared $withouts %{_smp_mflags}
+
+%install
+./b2 install release link=shared runtime-link=shared $withouts --prefix=%{buildroot}%{_prefix}
+rm -rf %{buildroot}%{_prefix}/include/*
+ln -s %{_prefix}/../boost-headers-$boostver/boost %{buildroot}%{_prefix}/include/boost
+rm -rf %{buildroot}%{_prefix}/share
+rm -rf %{buildroot}%{_prefix}/docs
+
+%clean
+rm -rf %{buildroot}
+
+%files
+%defattr(-,root,root,-)
+%{_prefix}/include/boost
+%{_prefix}/lib
+
+%changelog
+* Sat May 16 2015 kikairoya <kikairoya@gmail.com>
+- disable python, test
+
+* Sat Sep 13 2014 kikairoya <kikairoya@gmail.com>
+- warkaround for gcc 5.x
+
+* Fri May 30 2014 kikairoya <kikairoya@gmail.com>
+- Separate headers
+
+* Sun Jan 26 2014 kikairoya <kikairoya@gmail.com>
+- Initial build
+
+EOF
+done
+
+
+
+
+for pkg in $(cat ../series/* | sed -n 's#wandbox-boost-\(.*\)-clang-\(.*\)#\1,\2#gp'); do
+  boostver=$(echo $pkg | cut -d, -f1)
+  clangver=$(echo $pkg | cut -d, -f2)
+  boostver_tarname=$(echo $boostver | sed 's/\./_/g')
+  withouts="--without-mpi --without-signals --without-python --without-test"
+  if expr $(echo $clangver | cut -d. -f1-2) \> 3.3 > /dev/null; then
+    addflags="<cxxflags>-Wno-unused-local-typedefs"
+  fi
+  if expr $(echo $clangver | cut -d. -f1-2) = 3.2 > /dev/null; then
+    if expr $(echo $boostver | cut -d. -f1-2) = 1.54 > /dev/null; then
+      withouts="$withouts --without-log"
+    fi
+    if expr $(echo $boostver | cut -d. -f1-2) = 1.47 > /dev/null; then
+      withouts="$withouts --without-wave"
+    fi
+  fi
+  cat > ../specs/wandbox-boost-$boostver-clang-$clangver.spec <<EOF
+Summary: boost for wandbox
+Name: wandbox-boost-$boostver-clang-$clangver
+Version: $boostver
+Release: 3
+License: Boost
+Group: wandbox
+Requires: wandbox-boost-headers-%{version}
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+BuildRequires: wandbox-clang-$clangver libbz2-dev python-dev
+Source0: http://downloads.sourceforge.net/project/boost/boost/$boostver/boost_$boostver_tarname.tar.gz
+URL: http://melpon.org/wandbox
+
+%define _prefix /opt/wandbox/boost-$boostver-clang-$clangver
+%define _clangdir /opt/wandbox/llvm-$clangver
+%define _clanggccdir /opt/wandbox/gcc-4.8.3
+%define _libcxxdir /opt/wandbox/libcxx-$libcxxver
+
+%description
+a component of wandbox service
+
+%prep
+%setup -q -n boost_$boostver_tarname
+
+%build
+find . -maxdepth 1 -name "boost-$boostver-clang-$clangver*.patch" -print0 | xargs -0 cat | patch -p1
+PATH=%{_clangdir}/bin:\$PATH ./bootstrap.sh --prefix=%{_prefix}
+sed "s#using[ 	]*gcc.*;#using clang : : %{_clangdir}/bin/clang++ : <cxxflags>-I%{_clangdir}/include/c++/v1 <cxxflags>-stdlib=libc++ <linkflags>-L%{_clangdir}/lib <linkflags>-stdlib=libc++ <linkflags>-Wl,-rpath,%{_clangdir}/lib ;#" -i project-config.jam
+./b2 toolset=clang stage release link=shared runtime-link=shared $withouts %{_smp_mflags}
+
+%install
+./b2 toolset=clang install release link=shared runtime-link=shared $withouts --prefix=%{buildroot}%{_prefix}
+rm -rf %{buildroot}%{_prefix}/include/*
+ln -s %{_prefix}/../boost-headers-$boostver/boost %{buildroot}%{_prefix}/include/boost
+rm -rf %{buildroot}%{_prefix}/share
+rm -rf %{buildroot}%{_prefix}/docs
+
+%clean
+rm -rf %{buildroot}
+
+%files
+%defattr(-,root,root,-)
+%{_prefix}/include/boost
+%{_prefix}/lib
+
+%changelog
+* Sat May 16 2015 kikairoya <kikairoya@gmail.com.
+- disable python, boost
+- -Wno-unused-local-typedefs
+
+* Fri May 30 2014 kikairoya <kikairoya@gmail.com>
+- Separate headers
+
+* Mon Feb 17 2014 kikairoya <kikairoya@gmail.com>
+- Initial build
+
+EOF
+done

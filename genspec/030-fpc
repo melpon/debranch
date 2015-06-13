@@ -1,0 +1,82 @@
+#!/bin/bash
+
+cd "$(dirname "$0")"
+for ver in $(cat ../series/* | sed -n 's#wandbox-fpc-\([0-9]\+\.[0-9]\+\.[0-9]\+\)#\1#gp'); do
+  cat > ../specs/wandbox-fpc-$ver.spec <<EOF
+Summary: freepascal for wandbox
+Name: wandbox-fpc-$ver
+Version: $ver
+Release: 3
+License: GPL
+Group: wandbox
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+Source0: ftp://ftp.freepascal.org/pub/fpc/dist/%{version}/source/fpcbuild-%{version}.tar.gz
+Source1: ftp://ftp.freepascal.org/pub/fpc/dist/%{version}/i386-linux/fpc-%{version}.i386-linux.tar
+Source2: ftp://ftp.freepascal.org/pub/fpc/dist/%{version}/x86_64-linux/fpc-%{version}.x86_64-linux.tar
+URL: http://melpon.org/wandbox
+
+%define _prefix /opt/wandbox/fpc-%{version}
+
+%description
+a component of wandbox service
+
+%prep
+%setup -q -n fpcbuild-%{version}
+if [ "%{_arch}" = "x86_64" ]; then
+  prebuilt=x86_64-linux
+  tar xf %{SOURCE2}
+else
+  prebuilt=i386-linux
+  tar xf %{SOURCE1}
+fi
+mv fpc-%{version}.\$prebuilt prebuilt
+cd prebuilt
+echo \$PWD | HOME=\$PWD PREFIX=s$PWD ./install.sh
+cd ..
+
+%build
+cd fpcsrc/compiler
+PATH="\$PWD/../../prebuilt/bin:\$PATH" fpcmake -Tall
+cd ../..
+PATH="\$PWD/prebuilt/bin:\$PATH" %{__make} %{_smp_mflags} build NOGDB=1
+
+%install
+PATH="\$PWD/prebuilt/bin:\$PATH" HOME=\$PWD %{make_install} PREFIX=%{buildroot}/%{_prefix} NOGDB=1
+case %{_host_cpu} in
+  m68k*)      arch="68k" ;;
+  sparc*)     arch="sparc" ;;
+  i?86*)      arch="386" ;;
+  powerpc64*) arch="ppc64" ;;
+  powerpc*)   arch="ppc" ;;
+  arm*)       arch="arm" ;;
+  x86_64*)    arch="x64" ;;
+  mips*)      arch="mips" ;;
+  ia64*)      arch="ia64" ;;
+  alpha*)     arch="axp" ;;
+  *)          arch="" ;;
+esac
+if [ -n "\$arch" ]; then
+  ln -sf ../lib/fpc/2.6.2/ppc\$arch %{buildroot}%{_bindir}
+fi
+rm -rf %{buildroot}%{_prefix}/share
+rm -rf %{buildroot}%{_prefix}/man
+
+%clean
+rm -rf %{buildroot}
+
+%files
+%defattr(755,root,root,755)
+%{_bindir}
+%{_prefix}/lib
+
+%changelog
+* Sat Jun 6 2015 kikairoya <kikairoya@gmail.com>
+- use generator
+
+* Wed May 27 2015 kikairoya <kikairoya@gmail.com>
+- add platform symlink
+
+* Sun Jun 15 2014 kikairoya <kikairoya@gmail.com>
+- Initial build
+EOF
+done

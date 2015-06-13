@@ -1,0 +1,30 @@
+#!/bin/bash
+
+cat <<EOF
+{
+  "compilers":[
+EOF
+for c in $(find /opt/wandbox -maxdepth 1 -type d -name "pypy-*" -print | sort -V -r); do
+  v=$(cut -d- -f2 <<<$c)
+  cat <<EOF
+    {
+      "name":"pypy-$v",
+      "displayable":true,
+      "display-name":"PyPy",
+      "display-compile-command":"pypy prog.py",
+      "language":"Python",
+      "output-file":"prog.py",
+      "output-suffix":".py",
+      "run-command":["$c/bin/pypy", "prog.py"],
+      "runtime-option-raw":true,
+      "compile-command":"/bin/true",
+      "version-command":["$c/bin/pypy", "-c", "import sys; print(sys.version.split()[7])"],
+      "switches":[],
+      "initial-checked":[],
+    },
+EOF
+done
+cat <<EOF
+  ]
+}
+EOF

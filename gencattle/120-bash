@@ -1,0 +1,27 @@
+#!/bin/bash
+
+cat <<EOF
+{
+  "compilers":[
+EOF
+for c in $(find /opt/wandbox -maxdepth 1 -type d -name "bash-*" | sort -V -r); do
+  v=$(cut -d- -f2 <<<$c)
+  cat <<EOF
+    {
+      "name":"bash-$v",
+      "displayable":true,
+      "display-name":"Bash",
+      "display-compile-command":"bash prog.sh",
+      "language":"Bash",
+      "output-file":"prog.sh",
+      "output-suffix":".sh",
+      "compile-command":"/bin/true",
+      "run-command":["$c/bin/bash", "--norc", "prog.sh"],
+      "version-command":["/bin/sh", "-c", "$c/bin/bash --version | sed -n '1{s/.*version //;s/ .*//;p;d}'"],
+    },
+EOF
+done
+cat <<EOF
+  ]
+}
+EOF

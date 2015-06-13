@@ -1,0 +1,164 @@
+#!/bin/bash
+
+cd "$(dirname "$0")"
+for ver in $(cat ../series/* | sed -n 's#wandbox-clang-\([0-9]\+\.[0-9]\+\)#\1#gp'); do
+  libcxx_extraflags='-DCMAKE_SHARED_LINKER_FLAGS="-Wl,--start-group,-dn,--whole-archive,-lsupc++,--no-whole-archive,--end-group,-dy"'
+  majorver=$(echo $ver | cut -d. -f1)
+  minorver=$(echo $ver | cut -d. -f2)
+  numver=$ver
+  if [ "$ver" ">" "3.4" ]; then
+    boot_ccpkg='wandbox-clang-3.4'
+    boot_ccprefix='/opt/wandbox/llvm-3.4'
+    boot_cc='clang'
+    boot_cxx='clang++ -stdlib=libc++ -I/opt/wandbox/llvm-3.4/include/c++/v1'
+    monkey_patch="true"
+  else
+    boot_ccpkg='wandbox-gcc-4.8.4'
+    boot_ccprefix='/opt/wandbox/gcc-4.8.4'
+    boot_cc='gcc'
+    boot_cxx='g++'
+    monkey_patch='sed -i s#\"/usr/include/c++/v1#\"%{_prefix}/include/c++/v1# source/tools/clang/lib/Frontend/InitHeaderSearch.cpp;sed -i s#getDriver\(\).SysRoot\ +\ \"/usr/include/c++/v1\"#\"%{_prefix}/include/c++/v1\"# source/tools/clang/lib/Driver/ToolChains.cpp'
+    if [ "$minorver" "<" 4 ]; then
+      libcxx_extraflags=""
+    fi
+  fi
+  if [ "$ver" ">" "3.6" ]; then
+    abiincflagname=LIBCXX_CXX_ABI_INCLUDE_PATHS
+  else
+    abiincflagname=LIBCXX_LIBSUPCXX_INCLUDE_PATHS
+  fi
+  cat > ../specs/wandbox-clang-$ver.spec <<EOF
+Summary: clang for wandbox
+Name: wandbox-clang-$ver
+Version: $numver
+Release: 9
+License: Modified BSD
+Group: wandbox
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+Requires: ${boot_ccpkg} g++
+BuildRequires: wandbox-cmake
+URL: http://melpon.org/wandbox
+Source0: llvm-$ver.tar.xz
+Source1: clang-cfe-$ver.tar.xz
+Source2: clang-rt-$ver.tar.xz
+Source3: clang-tools-extra-$ver.tar.xz
+Source4: libcpp-$ver.tar.xz
+Source10: libcxx-3.5-fix-install-bitsdir.patch
+Source11: clang-3.2-add-searchdir.patch.in
+Source12: clang-3.3-add-searchdir.patch.in
+Source13: clang-3.4-add-searchdir.patch.in
+Source14: clang-3.4-add-searchdir.patch.in
+
+%define _prefix /opt/wandbox/llvm-$ver
+%define _ccprefix ${boot_ccprefix}
+
+%description
+a component of wandbox service
+
+%prep
+%setup -q -c -T -a 0 -a 1 -a 2 -a 3 -a 4
+mv llvm-$ver source
+mv clang-cfe-$ver source/tools/clang
+mv clang-rt-$ver source/projects/compiler-rt
+mv clang-tools-extra-$ver source/tools/clang/tools/extra
+mv libcpp-$ver libcxx
+cp %{SOURCE10} .
+for f in %{SOURCE11} %{SOURCE12} %{SOURCE13} %{SOURCE14}; do
+  sed "s#@@prefix@@#%{_prefix}#" \$f > \$(basename \$f .in)
+done
+cd source/tools/clang
+find ../../.. -maxdepth 1 -name "clang-$ver*.patch" -print0 | xargs -0 cat | patch -p1
+cd ../../..
+cd libcxx
+find .. -maxdepth 1 -name "libcxx-$ver*.patch" -print0 | xargs -0 cat | patch -p1
+cd ..
+$monkey_patch
+
+%build
+mkdir -p build b_libcxx
+case %{_host_cpu} in
+  i?86* | amd64* | x86_64*) arch="X86" ;;
+  sparc*)               arch="Sparc" ;;
+  powerpc*)             arch="PowerPC" ;;
+  arm*)                 arch="ARM" ;;
+  aarch64*)             arch="AArch64" ;;
+  mips* | mips64*)      arch="Mips" ;;
+  xcore*)               arch="XCore" ;;
+  msp430*)              arch="MSP430" ;;
+  hexagon*)             arch="Hexagon" ;;
+  nvptx*)               arch="NVPTX" ;;
+  s390x*)               arch="SystemZ" ;;
+  *)                    arch="Unknown" ;;
+esac
+export CC="%{_ccprefix}/bin/${boot_cc}"
+export CXX="%{_ccprefix}/bin/${boot_cxx}"
+export LIBRARY_PATH="%{_ccprefix}/lib:%{_ccprefix}/lib64:%{_ccprefix}/lib32"
+export LD_LIBRARY_PATH="%{_ccprefix}/lib:%{_ccprefix}/lib64:%{_ccprefix}/lib32"
+cd build
+/opt/wandbox/cmake/bin/cmake -G "Unix Makefiles" \\
+  -DLLVM_TARGETS_TO_BUILD="\$arch" \\
+  -DLLVM_TARGET_ARCH="\$arch" \\
+  -DCMAKE_BUILD_TYPE=Release \\
+  -DCMAKE_INSTALL_PREFIX=%{_prefix} \\
+  ../source
+%{__make} %{_smp_mflags}
+cd ../b_libcxx
+export CC="\$PWD/../build/bin/clang"
+export CXX="\$PWD/../build/bin/clang++"
+export LIBRARY_PATH=
+export LD_LIBRARY_PATH=
+/opt/wandbox/cmake/bin/cmake -G "Unix Makefiles" \\
+  -DLIBCXX_CXX_ABI=libsupc++ "${libcxx_extraflags}" \\
+  -D$abiincflagname="$(echo '#include <cxxabi.h>' | g++ -E -xc++ - -H 2>&1 > /dev/null | sed 's#^\\.\\+ \\(.*\\)/bits/.*#\\1#p;s#^\\.\\+ \\(.*\\)/.*#\\1#p;d' | sort -u | tr '\n' ';')." \\
+  -DCMAKE_INSTALL_PREFIX=%{_prefix} \\
+  ../libcxx
+%{__make} %{_smp_mflags}
+
+%install
+cd build
+%{make_install}
+cd ../b_libcxx
+%{make_install}
+rm -rf %{buildroot}%{_prefix}/share
+rm -rf %{buildroot}%{_prefix}/docs
+rm -rf %{buildroot}%{_prefix}/include/c++/v1/c++
+
+%clean
+rm -rf %{buildroot}
+
+%files
+%defattr(-,root,root,-)
+%{_prefix}/bin
+%{_prefix}/include
+%{_prefix}/lib
+
+%changelog
+ * Sat May 16 2015 kikairoya <kikairoya@gmail.com>
+ - use prefetched source archive
+
+ * Sun Feb 8 2015 kikairoya <kikairoya@gmail.com>
+ - embed libsupc++.a to libc++.so
+
+ * Fri Jan 2 2015 kikairoya <kikairoya@gmail.com>
+ - use clang for clang>3.4
+
+ * Sun Sep 14 2014 kikairoya <kikairoya@gmail.com>
+ - add workaround for http://llvm.org/bugs/show_bug.cgi?id=20936
+
+ * Fri May 30 2014 kikairoya <kikairoya@gmail.com>
+ - link libstdc++ statically
+
+ * Tue May 27 2014 kikairoya <kikairoya@gmail.com>
+ - use gcc 4.8.3
+
+ * Sun Feb 16 2014 kikairoya <kikairoya@gmail.com>
+ - use svn
+
+ * Mon Feb 3 2014 kikairoya <kikairoya@gmail.com>
+ - generate from script
+
+ * Sun Dec 29 2013 kikairoya <kikairoya@gmail.com>
+ - Initial build
+
+EOF
+done

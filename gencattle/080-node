@@ -1,0 +1,32 @@
+#!/bin/bash
+
+cat <<EOF
+{
+  "compilers":[
+EOF
+for c in $(find /opt/wandbox -maxdepth 1 -type d -name "node-*" | sort -V -r); do
+  v=$(cut -d- -f2 <<<$c)
+  cat <<EOF
+    {
+      "name":"node-$v",
+      "displayable":true,
+      "display-name":"Node.js",
+      "display-compile-command":"node prog.js",
+      "language":"JavaScript",
+      "output-file":"prog.js",
+      "output-suffix":".js",
+      "compile-command":"/bin/true",
+      "run-command":["$c/bin/node", "prog.js"],
+      "version-command":["/bin/sh", "-c", "$c/bin/node --version | cut -c2-"],
+      "switches":[
+        {"name":"node-harmony","display-name":"--harmony","values":"--harmony","runtime":true,"insert-position":1},
+      ],
+      "initial-checked":[],
+      "runtime-option-raw":true
+    },
+EOF
+done
+cat <<EOF
+  ]
+}
+EOF

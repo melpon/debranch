@@ -1,0 +1,28 @@
+#!/bin/bash
+
+cat <<EOF
+{
+  "compilers":[
+EOF
+for c in gcc clang; do
+  for g in $(find /opt/wandbox -maxdepth 1 -type d -name "$c-*" -print | sort -V -r); do
+    v=$(echo $g | cut -d- -f2)
+    if [[ -d /opt/wandbox/sprout ]]; then
+      cat <<EOF
+    {
+      "name":"sprout-$c-$v",
+      "displayable":false,
+      "append-to":"$c-$v",
+      "switches":[
+        {"name":"sprout","display-name":"Sprout","values":"-I/opt/wandbox/sprout"},
+      ],
+      "initial-checked":["sprout"]
+    },
+EOF
+    fi
+  done
+done
+cat <<EOF
+  ]
+}
+EOF

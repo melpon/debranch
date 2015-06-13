@@ -1,0 +1,35 @@
+#!/bin/bash
+
+cat <<EOF
+{
+  "compilers":[
+EOF
+for c in $(find /opt/wandbox -maxdepth 1 -type d -name "python-*" -print | sort -V -r); do
+  v=$(cut -d- -f2 <<<$c)
+  if [ "$v" "<" "3" ]; then
+    b="python"
+  else
+    b="python3"
+  fi
+  cat <<EOF
+    {
+      "name":"cpython-$v",
+      "displayable":true,
+      "display-name":"CPython",
+      "display-compile-command":"python prog.py",
+      "language":"Python",
+      "output-file":"prog.py",
+      "output-suffix":".py",
+      "run-command":["$c/bin/$b", "prog.py"],
+      "runtime-option-raw":true,
+      "compile-command":"/bin/true",
+      "version-command":["$c/bin/$b", "-c", "import sys; print(sys.version.split()[0])"],
+      "switches":[],
+      "initial-checked":[],
+    },
+EOF
+done
+cat <<EOF
+  ]
+}
+EOF
