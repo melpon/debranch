@@ -1,7 +1,7 @@
 Summary: perl for wandbox
 Name: wandbox-perl-5.19.2
 Version: 5.19.2
-Release: 1
+Release: 2
 License: GPL1+
 Group: wandbox
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -20,6 +20,7 @@ a component of wandbox service
 
 %build
 ./Configure -des -Dprefix=%{_prefix} -Dusedevel
+ln -sf ../Porting lib/Porting
 %{__make} %{_smp_mflags}
 
 %install
@@ -34,8 +35,11 @@ rm -rf %{buildroot}
 %files
 %defattr(755,root,root,644)
 %{_bindir}
-%{_prefix}/lib
+%attr(755,root,root) %{_prefix}/lib
 
 %changelog
- * Sun Feb 16 2014 kikairoya <kikairoya@gmail.com>
- - Initial build
+* Mon Dec 28 2015 kikairoya <kikairoya@gmail.com>
+- fix permission
+
+* Sun Feb 16 2014 kikairoya <kikairoya@gmail.com>
+- Initial build

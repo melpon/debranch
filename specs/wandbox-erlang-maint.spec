@@ -1,7 +1,7 @@
 Summary: erlang for wandbox
 Name: wandbox-erlang-maint
 Version: %(eval date +%Y%m%d)
-Release: 3
+Release: 4
 License: GPL
 Group: wandbox
 BuildRoot: %{_tmppath}/%{name}-head-%{release}-buildroot
@@ -15,7 +15,7 @@ a component of wandbox service
 
 %prep
 %setup -q -c -T %{name}-head-%{release}
-git clone https://github.com/erlang/otp.git . --depth 1 -b maint
+git clone `/opt/wandbox/debranch/bin/debranch.sh https://github.com/erlang/otp.git` . --depth 1 -b maint
 
 %build
 ./otp_build autoconf
@@ -34,6 +34,9 @@ rm -rf %{buildroot}
 %{_prefix}/lib64
 
 %changelog
+* Sat Dec 12 2015 kikairoya <kikairoya@gmail.com>
+- use debranch repository cache
+
 * Sat May 23 2015 kikairoya <kikairoya@gmail.com>
 - disable java
 

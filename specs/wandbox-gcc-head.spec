@@ -1,16 +1,16 @@
 Summary: gcc for wandbox
 Name: wandbox-gcc-head
 Version: %(eval date +%Y%m%d)
-Release: 1
+Release: 3
 Epoch: 2
 License: GPL
 Group: wandbox
 BuildRoot: %{_tmppath}/%{name}-head-%{release}-buildroot
-BuildRequires: libgmp-dev libmpfr-dev libmpc-dev git openssh-client bison flex m4
+BuildRequires: libgmp-dev libmpfr-dev libmpc-dev bison flex m4 curl unzip
 URL: http://melpon.org/wandbox
 
 %define _prefix /opt/wandbox/gcc-head
-%define _configure ../gcc/configure
+%define _configure ../gcc-master/configure
 %define _libexecdir %{_prefix}/libexec
 
 %description
@@ -18,8 +18,7 @@ a component of wandbox service
 
 %prep
 %setup -q -c -T %{name}-head-%{release}
-rm -rf gcc
-git clone https://github.com/mirrors/gcc.git gcc --depth 1
+git clone `/opt/wandbox/debranch/bin/debranch.sh https://github.com/gcc-mirror/gcc.git` gcc-master
 
 %build
 mkdir -p build
@@ -45,12 +44,18 @@ rm -rf %{buildroot}
 %{_prefix}/libexec
 
 %changelog
- * Mon May 26 2014 kikairoya <kikairoya@gmail.com>
- - separate gdc
+* Sat Dec 12 2015 kikairoya <kikairoya@gmail.com>
+- use debranch repository cache
 
- * Mon Feb 3 2014 kikairoya <kikairoya@gmail.com>
- - add gdc
- - use git+ssh instead of svn
+* Wed Oct 21 2015 kikairoya <kikairoya@gmail.com>
+- use github's pre-archived zip
 
- * Mon Dec 30 2013 kikairoya <kikairoya@gmail.com>
- - Initial build
+* Mon May 26 2014 kikairoya <kikairoya@gmail.com>
+- separate gdc
+
+* Mon Feb 3 2014 kikairoya <kikairoya@gmail.com>
+- add gdc
+- use git+ssh instead of svn
+
+* Mon Dec 30 2013 kikairoya <kikairoya@gmail.com>
+- Initial build

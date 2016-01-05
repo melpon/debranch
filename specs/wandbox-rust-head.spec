@@ -2,7 +2,7 @@
 Summary: rust for wandbox
 Name: wandbox-rust-head
 Version: %(eval date +%Y%m%d)
-Release: 1
+Release: 2
 License: Apache
 Group: wandbox
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -18,7 +18,9 @@ a component of wandbox service
 
 %prep
 %setup -q -c -T
-git clone https://github.com/mozilla/rust.git --depth 1 .
+git clone `/opt/wandbox/debranch/bin/debranch.sh https://github.com/mozilla/rust.git` .
+/opt/wandbox/debranch/bin/debranch.sh --git-submodule https://github.com/mozilla/rust.git
+git submodule update
 
 %build
 export CC="%{gccdir}/bin/gcc"
@@ -43,6 +45,9 @@ rm -rf %{buildroot}
 %{_prefix}/lib
 
 %changelog
- * Sat Jun 21 2014 kikairoya <kikairoya@gmail.com>
- - Initial build
+* Sun Dec 27 2015 kikairoya <kikairoya@gmail.com>
+- use debranch repository cache
+
+* Sat Jun 21 2014 kikairoya <kikairoya@gmail.com>
+- Initial build
 

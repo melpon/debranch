@@ -1,7 +1,7 @@
 Summary: mono for wandbox
 Name: wandbox-mono-head
 Version: %(eval date +%Y%m%d)
-Release: 3
+Release: 4
 License: GPL
 Group: wandbox
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -19,7 +19,8 @@ a component of wandbox service
 
 %prep
 %setup -q -T -c
-git clone https://github.com/mono/mono.git . --depth 1
+git clone `/opt/wandbox/debranch/bin/debranch.sh https://github.com/mono/mono.git` .
+/opt/wandbox/debranch/bin/debranch.sh --git-submodule https://github.com/mono/mono.git
 
 %build
 export CC="/opt/wandbox/gcc-%{gccver}/bin/gcc -static-libgcc -static-libstdc++"
@@ -46,12 +47,15 @@ rm -rf %{buildroot}
 %{_prefix}
 
 %changelog
- * Sun Jun 08 2015 kikairoya <kikairoya@gmail.com>
- - use mono-3.12.0 as bootstrap compiler
+* Sun Dec 27 2015 kikairoya <kikairoya@gmail.com>
+- use debranch repository cache
 
- * Sun Jun 15 2014 kikairoya <kikairoya@gmail.com>
- - do parallel build
+* Sun Jun 08 2015 kikairoya <kikairoya@gmail.com>
+- use mono-3.12.0 as bootstrap compiler
 
- * Sat Jun 14 2014 kikairoya <kikairoya@gmail.com>
- - Initial build
+* Sun Jun 15 2014 kikairoya <kikairoya@gmail.com>
+- do parallel build
+
+* Sat Jun 14 2014 kikairoya <kikairoya@gmail.com>
+- Initial build
 

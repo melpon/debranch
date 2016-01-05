@@ -1,12 +1,12 @@
 Summary: boost for wandbox
 Name: wandbox-boost-1.57.0-gcc-4.7.4
 Version: 1.57.0
-Release: 3
+Release: 4
 License: Boost
 Group: wandbox
 Requires: wandbox-boost-headers-%{version}
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: wandbox-gcc-4.7.4 libbz2-dev python-dev
+BuildRequires: wandbox-gcc-4.7.4 libbz2-dev
 Source0: http://downloads.sourceforge.net/project/boost/boost/1.57.0/boost_1_57_0.tar.gz
 URL: http://melpon.org/wandbox
 
@@ -22,10 +22,10 @@ a component of wandbox service
 %build
 PATH=%{_gccdir}/bin:$PATH ./bootstrap.sh --prefix=%{_prefix}
 sed "s#using[ 	]*gcc.*;#using gcc : : %{_gccdir}/bin/g++ : <linkflags>-Wl,-rpath,%{_gccdir}/lib,-rpath,%{_gccdir}/lib64  <cxxflags>-Wno-unused-local-typedefs ;#" -i project-config.jam
-./b2 stage release link=shared runtime-link=shared --without-mpi %{_smp_mflags}
+./b2 stage release link=shared runtime-link=shared --without-mpi --without-python --without-test %{_smp_mflags}
 
 %install
-./b2 install release link=shared runtime-link=shared --without-mpi --prefix=%{buildroot}%{_prefix}
+./b2 install release link=shared runtime-link=shared --without-mpi --without-python --without-test --prefix=%{buildroot}%{_prefix}
 rm -rf %{buildroot}%{_prefix}/include/*
 ln -s %{_prefix}/../boost-headers-1.57.0/boost %{buildroot}%{_prefix}/include/boost
 rm -rf %{buildroot}%{_prefix}/share
@@ -40,12 +40,15 @@ rm -rf %{buildroot}
 %{_prefix}/lib
 
 %changelog
- * Sat Sep 13 2014 kikairoya <kikairoya@gmail.com>
- - warkaround for gcc 5.x
+* Sat May 16 2015 kikairoya <kikairoya@gmail.com>
+- disable python, test
 
- * Fri May 30 2014 kikairoya <kikairoya@gmail.com>
- - Separate headers
+* Sat Sep 13 2014 kikairoya <kikairoya@gmail.com>
+- warkaround for gcc 5.x
 
- * Sun Jan 26 2014 kikairoya <kikairoya@gmail.com>
- - Initial build
+* Fri May 30 2014 kikairoya <kikairoya@gmail.com>
+- Separate headers
+
+* Sun Jan 26 2014 kikairoya <kikairoya@gmail.com>
+- Initial build
 

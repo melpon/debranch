@@ -1,15 +1,15 @@
-Summary: gcc for wandbox
-Name: wandbox-gcc-head
+Summary: gdc for wandbox
+Name: wandbox-gdc-head
 Version: %(eval date +%Y%m%d)
-Release: 1
+Release: 3
 Epoch: 2
 License: GPL
 Group: wandbox
 BuildRoot: %{_tmppath}/%{name}-head-%{release}-buildroot
-BuildRequires: libgmp-dev libmpfr-dev libmpc-dev git subversion bison flex m4
+BuildRequires: libgmp-dev libmpfr-dev libmpc-dev subversion bison flex m4 curl unzip
 URL: http://melpon.org/wandbox
 
-%define _prefix /opt/wandbox/gcc-head
+%define _prefix /opt/wandbox/gdc-head
 %define _configure ../gcc/configure
 %define _libexecdir %{_prefix}/libexec
 
@@ -18,10 +18,12 @@ a component of wandbox service
 
 %prep
 %setup -q -c -T %{name}-head-%{release}
-rm -rf gcc gdc
-git clone https://github.com/D-Programming-GDC/GDC.git gdc --depth 1
-svn co https://gcc.gnu.org/svn/gcc/trunk gcc -r $(TZ=UTC svn log https://gcc.gnu.org/svn/gcc/trunk -r \{$( date "+%Y%m%d" -d "$(cut -d- -f3 < gdc/gcc.version) next day")\}:HEAD -l 1 --xml --with-revprop logentry | sed -n '/revision/{s/.*revision="\([0-9]\+\)".*/\1/p;d};d')
-cd gdc
+git clone `/opt/wandbox/debranch/bin/debranch.sh https://github.com/D-Programming-GDC/GDC.git` GDC-master
+git clone `/opt/wandbox/debranch/bin/debranch.sh https://github.com/gcc-mirror/gcc.git` gcc
+cd gcc
+git checkout $(TZ=UTC git log -n1 --pretty=tformat:%H --before=$(date "+%Y-%m-%d" -d "$(cut -d- -f3 < ../GDC-master/gcc.version) next day"))
+cd ../GDC-master
+sed -i "s/d-warn = .*/\\\\0 -Wno-suggest-attribute=format/" gcc/d/Make-lang.in
 ./setup-gcc.sh ../gcc
 cd ..
 
@@ -50,12 +52,18 @@ rm -rf %{buildroot}
 %{_prefix}/libexec
 
 %changelog
- * Mon May 26 2014 kikairoya <kikairoya@gmail.com>
- - separate from gcc-head
+* Sat Dec 12 2015 kikairoya <kikairoya@gmail.com>
+- use debranch repository cache
 
- * Mon Feb 3 2014 kikairoya <kikairoya@gmail.com>
- - add gdc
- - use git+ssh instead of svn
+* Wed Oct 21 2015 kikairoya <kikairoya@gmail.com>
+- use github's pre-archived zip
 
- * Mon Dec 30 2013 kikairoya <kikairoya@gmail.com>
- - Initial build
+* Mon May 26 2014 kikairoya <kikairoya@gmail.com>
+- separate from gcc-head
+
+* Mon Feb 3 2014 kikairoya <kikairoya@gmail.com>
+- add gdc
+- use git+ssh instead of svn
+
+* Mon Dec 30 2013 kikairoya <kikairoya@gmail.com>
+- Initial build

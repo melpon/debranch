@@ -1,8 +1,8 @@
-%define erlangver 17.0
+%define erlangver 18.1
 Summary: elixir for wandbox
 Name: wandbox-elixir-head
 Version: %(eval date +%Y%m%d)
-Release: 2
+Release: 4
 License: Apache
 Group: wandbox
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -17,7 +17,7 @@ a component of wandbox service
 
 %prep
 %setup -q -c -T
-git clone https://github.com/elixir-lang/elixir.git --depth 1 . -b master
+git clone `/opt/wandbox/debranch/bin/debranch.sh https://github.com/elixir-lang/elixir.git` . -b master
 
 %build
 PATH=%{erlangdir}/bin:$PATH %{__make} PREFIX=%{_prefix} %{_smp_mflags}
@@ -36,6 +36,12 @@ rm -rf %{buildroot}
 %{_prefix}/lib
 
 %changelog
+* Sun Dec 27 2015 kikairoya <kikairoya@gmail.com>
+- use debranch repository cache
+
+* Sun Oct 18 2015 kikairoya <kikairoya@gmail.com>
+- use erlang 18
+
 * Sat Jun 13 2015 kikairoya <kikairoya@gmail.com>
 - use PREFIX instead of DESTDIR
 
