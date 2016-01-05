@@ -1,33 +1,33 @@
 Summary: boost for wandbox
-Name: wandbox-boost-1.57.0-gcc-4.8.2
-Version: 1.57.0
+Name: wandbox-boost-1.50.0-gcc-5.3.0
+Version: 1.50.0
 Release: 4
 License: Boost
 Group: wandbox
 Requires: wandbox-boost-headers-%{version}
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: wandbox-gcc-4.8.2 libbz2-dev
-Source0: http://downloads.sourceforge.net/project/boost/boost/1.57.0/boost_1_57_0.tar.gz
+BuildRequires: wandbox-gcc-5.3.0 libbz2-dev
+Source0: http://downloads.sourceforge.net/project/boost/boost/1.50.0/boost_1_50_0.tar.gz
 URL: http://melpon.org/wandbox
 
-%define _prefix /opt/wandbox/boost-1.57.0-gcc-4.8.2
-%define _gccdir /opt/wandbox/gcc-4.8.2
+%define _prefix /opt/wandbox/boost-1.50.0-gcc-5.3.0
+%define _gccdir /opt/wandbox/gcc-5.3.0
 
 %description
 a component of wandbox service
 
 %prep
-%setup -q -n boost_1_57_0
+%setup -q -n boost_1_50_0
 
 %build
 PATH=%{_gccdir}/bin:$PATH ./bootstrap.sh --prefix=%{_prefix}
-sed "s#using[ 	]*gcc.*;#using gcc : : %{_gccdir}/bin/g++ : <linkflags>-Wl,-rpath,%{_gccdir}/lib,-rpath,%{_gccdir}/lib64  <cxxflags>-Wno-unused-local-typedefs <cxxflags>-std=gnu++11 ;#" -i project-config.jam
+sed "s#using[ 	]*gcc.*;#using gcc : : %{_gccdir}/bin/g++ : <linkflags>-Wl,-rpath,%{_gccdir}/lib,-rpath,%{_gccdir}/lib64  <cxxflags>-Wno-unused-local-typedefs <cxxflags>-std=gnu++11 <cxxflags>-Wno-deprecated-declarations ;#" -i project-config.jam
 ./b2 stage release link=shared runtime-link=shared --without-mpi --without-python --without-test %{_smp_mflags}
 
 %install
 ./b2 install release link=shared runtime-link=shared --without-mpi --without-python --without-test --prefix=%{buildroot}%{_prefix}
 rm -rf %{buildroot}%{_prefix}/include/*
-ln -s %{_prefix}/../boost-headers-1.57.0/boost %{buildroot}%{_prefix}/include/boost
+ln -s %{_prefix}/../boost-headers-1.50.0/boost %{buildroot}%{_prefix}/include/boost
 rm -rf %{buildroot}%{_prefix}/share
 rm -rf %{buildroot}%{_prefix}/docs
 
