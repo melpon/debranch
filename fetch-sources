@@ -17,16 +17,19 @@ cksum() {
 fetch() {
   local site="${SITE[$1]:-$1}"
   if echo "$site" | grep -q '://'; then
+    echo "fetching $(basename "$1") from $site" 
     curl -L "$site" -o "$(basename "$1")"
   elif [[ -n "${SVN[$1]}" ]]; then
     if ! [[ -f "$1" ]]; then
       local r="${SVN[$1]}"
       local d="$(mktemp -d)"
+      echo "fetching $1 from SVN $r" 
       ( cd "$d" && svn export -q "$r" "$(echo $(basename "$1") | sed 's/\.tar\(\.gz\|\.bz2\|\.Z\|\.xz\|\.lzma\)\?$//')" && tar caf "$1" * ) && \
       mv "$d/$1" . && \
       mv -rf "$d"
     fi
   else
+    echo "copying $1" 
     cp "$srcdir/sources/$1" .
   fi
 }

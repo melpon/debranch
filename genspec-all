@@ -1,0 +1,8 @@
+#!/bin/sh -e
+cd "`dirname "$0"`"
+echo -n "generating specs"
+for genspec in genspec/*; do
+  echo -n "."
+  $genspec
+done
+echo "done"

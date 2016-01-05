@@ -9,7 +9,8 @@ all=false
 clean=""
 keep=false
 opt="$1"
-pass=""
+exclude=""
+include=""
 roomba=false
 headdate=$(date +%Y%m%d)
 
@@ -17,7 +18,7 @@ while [ -n "$opt" ]; do
   true
   case "$opt" in
   -h|--h|--he|--hel|--help)
-    echo "usage: $0 [--skip-head] [--all] [--clean] [--keep-going] [--head-date=\$(date +%Y%m%d)] [--nodownload] [--roomba] [--pass=pkg,pkg,...]"
+    echo "usage: $0 [--skip-head] [--all] [--clean] [--keep-going] [--head-date=\$(date +%Y%m%d)] [--nodownload] [--roomba] [--exclude=pattern,pkg,...] [--include=pattern,pkg,...]"
     exit
     ;;
   -n|--n|--no|--nod|--nodo|--nodow|--nodown|--nodownl|--nodownlo|--nodownloa|--nodownload)
@@ -40,11 +41,20 @@ while [ -n "$opt" ]; do
     keep=true
     shift
     ;;
-  -p|--p|--pa|--pas|--pass|--p=*|--pa=*|--pas=*|--pass=*)
+  -e|--e|--ex|--exc|--excl|--exclu|--exclud|--exclude|--e=*|--ex=*|--exc=*|--excl=*|--exclu=*|--exclud=*|--exclude=*)
     if echo $1 | grep -q =; then
-      pass="$pass $(echo "$1" | cut -d= -f2 | sed 's/,/ /g')"
+      exclude="$exclude $(echo "$1" | cut -d= -f2 | sed 's/,/ /g')"
     else
-      pass="$pass $(echo "$2" | sed 's/,/ /g')"
+      exclude="$exclude $(echo "$2" | sed 's/,/ /g')"
+      shift
+    fi
+    shift
+    ;;
+  -i|--i|--in|--inc|--incl|--inclu|--includ|--include|--i=*|--in=*|--inc=*|--incl=*|--inclu=*|--includ=*|--include=*)
+    if echo $1 | grep -q =; then
+      include="$include $(echo "$1" | cut -d= -f2 | sed 's/,/ /g')"
+    else
+      include="$include $(echo "$2" | sed 's/,/ /g')"
       shift
     fi
     shift
@@ -61,6 +71,11 @@ while [ -n "$opt" ]; do
       shift
     fi
     shift
+    ;;
+  -*)
+    echo "unknown option '$opt'"
+    exit 1
+    ;;
   esac
   opt="$1"
 done
@@ -91,20 +106,21 @@ test_need_to_build() {
 }
 $keep || set -e
 cd "$(dirname "$0")"
+echo "build start: $(date -u +%FT%TZ)" > buildlog/status
 if $roomba; then
   rm -rf $(rpm --eval='%{_builddir} %{_buildrootdir} %{_rpmdir} %{_specdir} %{_srcrpmdir}')
   mkdir -p $(rpm --eval='%{_builddir} %{_buildrootdir} %{_rpmdir} %{_specdir} %{_srcrpmdir}')
 fi
 $nodownload || ./fetch-sources
-echo -n "generating specs"
-for genspec in genspec/*; do
-  echo -n "."
-  $genspec
-done
-echo "done"
+./genspec-all
 for pkg in $(cat series/*); do
   echo -n "preparing for $pkg..."
-  if [ -z "$pkg" ] || (echo " $pass " | grep -q " $pkg "); then
+  [ -z "$pkg" ] && continue
+  if echo " $exclude " | grep -q " $pkg "; then
+    echo " excluded."
+    continue
+  fi
+  if [ -n "$include" ] && ! (echo " $include " | grep -q " $pkg "); then
     echo " skip."
     continue
   fi
@@ -134,8 +150,11 @@ for pkg in $(cat series/*); do
   fi
 done
 
+echo "build finish: $(date -u +%FT%TZ)" >> buildlog/status
 if [ -n "$faillist" ]; then
   echo "failed to build package(s):"
   echo "$faillist"
+  echo "failed to build package(s):" >> buildlog/status
+  echo "$faillist" >> buildlog/status
   false
 fi
