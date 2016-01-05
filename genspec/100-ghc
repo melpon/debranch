@@ -1,28 +1,101 @@
 #!/bin/bash
 
+declare -A addlibs
+declare -A cabalver
+
+addlibs[7.10.2]="alex-3.1.4 array-0.5.1.0 async-2.0.2 attoparsec-0.13.0.1 \
+base-4.8.1.0 bytestring-0.10.6.0 Cabal-1.22.4.0 cabal-install-1.22.6.0 \
+case-insensitive-1.2.0.4 cgi-3001.2.2.2 containers-0.5.6.2 deepseq-1.4.1.1 \
+directory-1.2.2.0 exceptions-0.8.0.2 fgl-5.5.2.1 filepath-1.4.0.0 \
+GLURaw-1.5.0.1 GLUT-2.7.0.1 happy-1.19.5 hashable-1.2.3.3 haskell-src-1.0.2.0 \
+hpc-0.6.0.2 hscolour-1.23 html-1.0.1.2 HTTP-4000.2.20 HUnit-1.2.5.2 \
+mtl-2.2.1 multipart-0.1.2 network-2.6.2.1 network-uri-2.6.0.3 \
+ObjectName-1.1.0.0 old-locale-1.0.0.7 old-time-1.1.0.3 OpenGL-2.12.0.1 \
+OpenGLRaw-2.5.1.0 parallel-3.2.0.6 parsec-3.1.9 pretty-1.1.2.0 primitive-0.6 \
+process-1.2.3.0 QuickCheck-2.8.1 random-1.1 regex-base-0.93.2 \
+regex-compat-0.95.1 regex-posix-0.95.2 scientific-0.3.3.8 split-0.2.2 \
+StateVar-1.1.0.0 stm-2.4.4 syb-0.5.1 template-haskell-2.10.0.0 text-1.2.1.3 \
+tf-random-0.5 time-1.5.0.1 transformers-0.4.2.0 transformers-compat-0.4.0.4 \
+unix-2.7.1.0 unordered-containers-0.2.5.1 vector-0.11.0.0 xhtml-3000.2.1 \
+zlib-0.5.4.2"
+
+addlibs[7.8.3]="alex-3.1.3 array-0.5.0.0 async-2.0.1.5 attoparsec-0.10.4.0 \
+base-4.7.0.1 bytestring-0.10.4.0 Cabal-1.18.1.3 cabal-install-1.18.0.5 \
+case-insensitive-1.1.0.3 containers-0.5.5.1 deepseq-1.3.0.2 directory-1.2.1.0 \
+fgl-5.5.0.1 filepath-1.3.0.2 GLURaw-1.4.0.1 GLUT-2.5.1.1 happy-1.19.4 \
+hashable-1.2.2.0 haskell2010-1.1.2.0 haskell98-2.0.0.3 haskell-src-1.0.1.6 \
+hpc-0.6.0.1 hscolour-1.20.3 html-1.0.1.2 HTTP-4000.2.10 HUnit-1.2.5.2 \
+mtl-2.1.3.1 network-2.4.2.3 old-locale-1.0.0.6 old-time-1.1.0.2 OpenGL-2.9.2.0 \
+OpenGLRaw-1.5.0.0 parallel-3.2.0.4 parsec-3.1.5 pretty-1.1.1.1 \
+primitive-0.5.2.1 process-1.2.0.0 QuickCheck-2.6 random-1.0.1.1 \
+regex-base-0.93.2 regex-compat-0.95.1 regex-posix-0.95.2 split-0.2.2 \
+stm-2.4.2 syb-0.4.1 template-haskell-2.9.0.0 text-1.1.0.0 time-1.4.2 \
+transformers-0.3.0.0 unix-2.7.0.1 unordered-containers-0.2.4.0 \
+vector-0.10.9.1 xhtml-3000.2.1 zlib-0.5.4.1"
+
+addlibs[7.6.3]="alex-3.0.5 array-0.4.0.1 async-2.0.1.4 attoparsec-0.10.4.0 \
+base-4.6.0.1 bytestring-0.10.0.2 Cabal-1.16.0 cabal-install-1.16.0.2 \
+case-insensitive-1.0.0.1 cgi-3001.1.7.5 containers-0.5.0.0 deepseq-1.3.0.1 \
+directory-1.2.0.1 fgl-5.4.2.4 filepath-1.3.0.1 GLURaw-1.3.0.0 GLUT-2.4.0.0 \
+hashable-1.1.2.5 happy-1.18.10 haskell2010-1.1.1.0 haskell98-2.0.0.2 \
+haskell-src-1.0.1.5 hpc-0.6.0.0 html-1.0.1.2 HTTP-4000.2.8 HUnit-1.2.5.2 \
+network-2.4.1.2 old-locale-1.0.0.5 old-time-1.1.0.1 OpenGL-2.8.0.0 \
+OpenGLRaw-1.3.0.0 parallel-3.2.0.3 parsec-3.1.3 pretty-1.1.1.0 \
+primitive-0.5.0.1 process-1.1.0.2 QuickCheck-2.6 random-1.0.1.1 \
+regex-base-0.93.2 regex-compat-0.95.1 regex-posix-0.95.2 split-0.2.2 \
+stm-2.4.2 syb-0.4.0 text-0.11.3.1 template-haskell-2.8.0.0 time-1.4.0.1 \
+transformers-0.3.0.0 unix-2.6.0.1 unordered-containers-0.2.3.0 \
+vector-0.10.0.1 xhtml-3000.2.1 zlib-0.5.4.1"
+
+cabalver[7.10.2]="1.22.6.0"
+cabalver[7.8.3]="1.18.0.5"
+cabalver[7.6.3]="1.16.0.2"
+
 cd "$(dirname "$0")"
 for ver in $(cat ../series/* | sed -n 's#wandbox-ghc-\([0-9]\+\.[0-9]\+\.[0-9]\+\)#\1#gp'); do
+  if [[ $(printf "%04d%04d%04d" $(sed "s/\./ /g" <<<$ver)) < "000700100000" ]]; then
+    bootghcver=
+    bootghcpath=/usr/bin
+    bootghcpkg=ghc
+    bootopt=
+  else
+    bootghcver=7.8.3
+    bootghcpath=/opt/wandbox/ghc-$bootghcver/bin
+    bootghcpkg=wandbox-ghc-$bootghcver
+    bootopt=--no-doc
+  fi
   cat > ../specs/wandbox-ghc-$ver.spec <<EOF
 Summary: ghc for wandbox
 Name: wandbox-ghc-$ver
 Version: $ver
-Release: 2
+Release: 1
+Epoch: 2
 License: ?
 Group: wandbox
 BuildRoot: %{_tmppath}/%{name}-head-%{release}-buildroot
-BuildRequires: libgmp-dev ghc libffi-dev xsltproc libncurses5-dev
+BuildRequires: wget libgmp-dev $bootghcpkg libffi-dev xsltproc libncurses5-dev
 Source0: http://www.haskell.org/ghc/dist/%{version}/ghc-%{version}-src.tar.bz2
+Source1: https://hackage.haskell.org/package/cabal-install-${cabalver[$ver]}/cabal-install-${cabalver[$ver]}.tar.gz
+Source2: cabal.config.in
+Source3: ghc-7.10.2.patch
 URL: http://melpon.org/wandbox
 
 %define _prefix /opt/wandbox/ghc-%{version}
+%define _datadir %{_prefix}/share
 
 %description
 a component of wandbox service
 
 %prep
-%setup -q -n ghc-%{version}
+%setup -q -n ghc-%{version} -a 1
+for f in %{SOURCE3}; do
+  if echo \$f | grep -q %{version}; then
+    patch -p1 < \$f
+  fi
+done
 
 %build
+top=\$PWD
 cat > mk/build.mk <<EOT
 docdir = %{_defaultdocdir}/ghc
 htmldir = %{_defaultdocdir}/ghc
@@ -34,84 +107,72 @@ SRC_HC_OPTS+=-w
 INTEGER_LIBRARY=integer-gmp
 SRC_CC_OPTS+=%{optflags}
 EOT
-./configure --prefix=%{_prefix} --libdir=%{_libdir}
-%{__make} %{_smp_mflags}
+PATH=$bootghcpath:\$PATH ./configure --prefix=%{_prefix} --libdir=%{_libdir}
+PATH=$bootghcpath:\$PATH %{__make} %{_smp_mflags}
+rm -rf "\$top/cabal"
+mkdir -p cabal
+(
+  cd cabal-install-${cabalver[$ver]}
+  CURL="disable_curl_downloading" PATH="\$top/inplace/bin:\$PATH" PREFIX="\$top/cabal" GHC=ghc-stage2 sh ./bootstrap.sh --global $bootopt
+)
+ln -sf ghc-stage2 inplace/bin/ghc
+sed -e "s#@@BUILD@@#\$top#" -e "s#@@PREFIX@@#\$top/cabal#" %{SOURCE2} > cabal/config
+(
+  export PATH="\$top/inplace/bin:\$top/cabal/bin:\$PATH"
+  export CABAL_CONFIG="\$top/cabal/config"
+  ghc-pkg recache -f "\$top/cabal"
+  cabal update
+  cabal install ${addlibs[$ver]} --global --prefix="\$top/cabal" --force-reinstalls
+)
 
 %install
-%{make_install}
-rm -rf %{buildroot}%{_datadir}
+top=\$PWD
+PATH=$bootghcpath:\$PATH %{make_install}
 rm -rf %{buildroot}%{_mandir}
 binprefix=\$(sh config.guess)
 for f in \$(find '%{buildroot}%{_bindir}' -name "\$binprefix-*"); do
-  ln -s \$(basename "$f") \$(echo "\$f" | sed 's/\$binprefix-//')
+  ln -s \$(basename "\$f") \$(echo "\$f" | sed 's/\$binprefix-//')
+done
+for bin in alex cabal happy; do
+  install -m 755 cabal/bin/\$bin %{buildroot}%{_bindir}
+done
+s=""
+for pkg in \$(find inplace/lib/package.conf.d -name '*-inplace.conf' -printf '%f\\n' | sed 's/-inplace\\.conf\$//'); do
+  s="s#\$pkg-inplace#\$(find %{buildroot}%{_libdir}/ghc-%{version}/package.conf.d -name "\$pkg*.conf" -printf '%f\\n' | sed 's/\\.conf\$//')#g;\$s"
+done  
+for pkgpath in \$(find cabal/lib -mindepth 2 -maxdepth 2 -path '*ghc-%{version}*'); do
+  pkgname=\$(echo \$pkgpath | sed 's#/[^/]*ghc-%{version}##;s#cabal/lib/##;s#-[0-9a-zA-Z_]\\+\$##')
+  c=\$(find inplace/lib/package.conf.d -regex ".+/\$pkgname-[0-9a-zA-Z_]+\\.conf")
+  rsync -a \$pkgpath/ %{buildroot}%{_libdir}/ghc-%{version}/\$pkgname
+  sed "s#\$top/\$pkgpath#%{_libdir}/ghc-%{version}/\$pkgname#g;s#^\\(haddock-.*:\\).*#\\1#;\$s" \$c > %{buildroot}%{_libdir}/ghc-%{version}/package.conf.d/\$(basename \$c)
+done
+inplace/bin/ghc-pkg -f %{buildroot}%{_libdir}/ghc-%{version}/package.conf.d recache
+for f in \`inplace/bin/ghc-pkg -f %{buildroot}%{_libdir}/ghc-%{version}/package.conf.d list --simple | tr " " "\\n" | sort -n | sed 's/-\\([0-9]\\+\\.\\)*[0-9]\\+\$//g' | uniq -d\`; do
+  for g in \`inplace/bin/ghc-pkg -f %{buildroot}%{_libdir}/ghc-%{version}/package.conf.d list --simple | tr " " "\\n" | sort -n | sed -n "/\$f-\\([0-9]\\+\\.\\)*[0-9]\\+\$/p" | head -n-1\`; do
+    inplace/bin/ghc-pkg -f %{buildroot}%{_libdir}/ghc-%{version}/package.conf.d unregister \$g
+    rm -rf %{buildroot}%{_libdir}/ghc-%{version}/\$g
+  done
 done
 
 %clean
 rm -rf %{buildroot}
+
+%post
+%{_bindir}/ghc-pkg --global recache
 
 %files
 %defattr(-,root,root,-)
 %{_bindir}
 %{_libdir}
+%{_datadir}
 
 %changelog
-* Sat Jun 6 2015 kikairoya <kikairoya@gmail.com>
-- use generator
+* Mon Jan 4 2016 kikairoya <kikairoya@gmail.com>
+- purge haskell-platform
 
-* Tue Jan 28 2014 kikairoya <kikairoya@gmail.com>
-- Initial build
-EOF
-done
+* Thu Oct 22 2015 kikairoya <kikairoya@gmail.com>
+- select version of boot ghc
 
-
-for ver in $(cat ../series/* | sed -n 's#wandbox-haskell-platform-\(.*\)-ghc-\(.*\)#\1,\2#gp'); do
-  hpver=$(echo $ver | cut -d, -f1)
-  ghcver=$(echo $ver | cut -d, -f2)
-  cat > ../specs/wandbox-haskell-platform-$hpver-ghc-$ghcver.spec <<EOF
-%define _ghcver $ghcver
-Summary: haskell platform for wandbox
-Name: wandbox-haskell-platform-$hpver-ghc-$ghcver
-Version: $hpver
-Release: 2
-License: ?
-Group: wandbox
-BuildRoot: %{_tmppath}/%{name}-head-%{release}-buildroot
-Requires: wandbox-ghc-%{version}
-BuildRequires: libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev
-Source0: http://www.haskell.org/platform/download/%{version}/haskell-platform-%{version}.tar.gz
-Source1: haskell-platform-install.patch
-URL: http://melpon.org/wandbox
-
-%define _prefix /opt/wandbox/ghc-%{_ghcver}
-
-%description
-a component of wandbox service
-
-%prep
-%setup -q -n haskell-platform-%{version}
-patch -p1 < %{SOURCE1}
-
-%build
-%{configure} --with-ghc=%{_bindir}/ghc --with-ghc-pkg=%{_bindir}/ghc-pkg
-%{__make} %{_smp_mflags}
-
-%install
-%{make_install}
-rm -rf %{buildroot}%{_datadir}
-rm -rf %{buildroot}%{_mandir}
-rm -rf %{buildroot}%{_prefix}/share
-rm -rf %{buildroot}/load
-
-%clean
-rm -rf %{buildroot}
-
-%files
-%defattr(-,root,root,-)
-%{_prefix}/bin
-%{_prefix}/lib
-
-
-%changelog
 * Sat Jun 6 2015 kikairoya <kikairoya@gmail.com>
 - use generator
 

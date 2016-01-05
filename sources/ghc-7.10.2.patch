@@ -1,0 +1,12 @@
+--- ghc-7.10.2/libraries/bytestring/Data/ByteString/Builder/ASCII.hs	2016-01-03 00:37:49.090614727 +0000
++++ ghc-7.10.2/libraries/bytestring/Data/ByteString/Builder/ASCII.hs.orig	2016-01-03 00:37:42.454617647 +0000
+@@ -96,9 +96,7 @@
+ import           Data.ByteString.Builder.Prim.Internal.UncheckedShifts
+                    ( caseWordSize_32_64 )
+ 
+-# if __GLASGOW_HASKELL__ < 710
+ import           GHC.Num     (quotRemInteger)
+-# endif
+ import           GHC.Types   (Int(..))
+ 
+ 
