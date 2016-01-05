@@ -1,6 +1,6 @@
 Summary: erlang for wandbox
-Name: wandbox-erlang-17.0
-Version: 17.0
+Name: wandbox-erlang-18.1
+Version: 18.1
 Release: 3
 License: GPL
 Group: wandbox

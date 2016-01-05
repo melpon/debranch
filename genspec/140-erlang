@@ -1,6 +1,11 @@
+#!/bin/bash
+
+cd "$(dirname "$0")"
+for ver in $(cat ../series/* | sed -n 's#wandbox-erlang-\([0-9]\+\.[0-9]\+\)#\1#gp'); do
+  cat > ../specs/wandbox-erlang-$ver.spec <<EOF
 Summary: erlang for wandbox
-Name: wandbox-erlang-17.0
-Version: 17.0
+Name: wandbox-erlang-$ver
+Version: $ver
 Release: 3
 License: GPL
 Group: wandbox
@@ -42,3 +47,5 @@ rm -rf %{buildroot}
 
 * Sat Jun 21 2014 kikairoya <kikairoya@gmail.com>
 - Initial build
+EOF
+done
