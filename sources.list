@@ -195,3 +195,4 @@ SITE['libcpp-3.3.tar.gz.sig']='http://www.llvm.org/releases/3.3/libcxx-3.3.src.t
 NOVERIFY['libcpp-3.2.tar.xz']=''
 SVN['libcpp-3.2.tar.xz']='https://llvm.org/svn/llvm-project/libcxx/branches/release_32'
 NOVERIFY['debranch.sh']=''
+NOVERIFY['gdc-head.patch']=''

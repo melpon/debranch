@@ -8,6 +8,7 @@ Group: wandbox
 BuildRoot: %{_tmppath}/%{name}-head-%{release}-buildroot
 BuildRequires: libgmp-dev libmpfr-dev libmpc-dev subversion bison flex m4 curl unzip
 URL: http://melpon.org/wandbox
+Source0: gdc-head.patch
 
 %define _prefix /opt/wandbox/gdc-head
 %define _configure ../gcc/configure
@@ -23,7 +24,7 @@ git clone `/opt/wandbox/debranch/bin/debranch.sh https://github.com/gcc-mirror/g
 cd gcc
 git checkout $(TZ=UTC git log -n1 --pretty=tformat:%H --before=$(date "+%Y-%m-%d" -d "$(cut -d- -f3 < ../GDC-master/gcc.version) next day"))
 cd ../GDC-master
-sed -i "s/d-warn = .*/\\\\0 -Wno-suggest-attribute=format/" gcc/d/Make-lang.in
+patch -p1 < %{SOURCE0}
 ./setup-gcc.sh ../gcc
 cd ..
 

@@ -1,0 +1,26 @@
+diff --git a/gcc/d/Make-lang.in b/gcc/d/Make-lang.in
+index 5e9f1d4..8810a76 100644
+--- a/gcc/d/Make-lang.in
++++ b/gcc/d/Make-lang.in
+@@ -51,7 +51,7 @@ gdc-cross$(exeext): gdc$(exeext)
+ 	cp gdc$(exeext) gdc-cross$(exeext)
+ 
+ # Filter out pedantic and virtual overload warnings.
+-d-warn = $(filter-out -pedantic -Woverloaded-virtual, $(STRICT_WARN))
++d-warn = $(filter-out -pedantic -Woverloaded-virtual, $(STRICT_WARN)) -Wno-suggest-attribute=format
+ 
+ # D Frontend has slightly relaxed warnings compared to rest of GDC.
+ DMD_WARN_CXXFLAGS = -Wno-deprecated -Wstrict-aliasing -Wuninitialized
+diff --git a/libphobos/src/std/internal/math/gammafunction.d b/libphobos/src/std/internal/math/gammafunction.d
+index 28aafce..b58615a 100644
+--- a/libphobos/src/std/internal/math/gammafunction.d
++++ b/libphobos/src/std/internal/math/gammafunction.d
+@@ -420,7 +420,7 @@ real logGamma(real x)
+         if ( p == q )
+             return real.infinity;
+         int intpart = cast(int)(p);
+-        real sgngam = 1;
++        real sgngam = 1.0L;
+         if ( (intpart & 1) == 0 )
+             sgngam = -1;
+         z = q - p;
