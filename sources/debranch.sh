@@ -49,7 +49,7 @@ case "$mode" in
       git clone "$repo" --bare . 2>&6 1>&6
     else
       echo "*** updating $repo" >&6
-      git fetch -t --prune 2>&6 1>&6
+      git fetch -t --force --prune 'refs/heads/*:refs/heads/*' 2>&6 1>&6
     fi
     ;;
   svn)
