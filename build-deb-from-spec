@@ -41,7 +41,7 @@ rpmbuild -bb "$spec" --nodeps
 mkdir -p deb
 (
   cd deb;
-  echo "converting into $pkgname_$pkgver-$pkgrel_$pkgarch.deb..."
+  echo "converting into ${pkgname}_${pkgver}-${pkgrel}_${pkgarch}.deb..."
   fakeroot alien -k --scripts ~/rpmbuild/RPMS/$pkgarch/$pkgname-$pkgver-$pkgrel.$pkgarch.rpm
 )
 if $clean; then
