@@ -1,0 +1,9 @@
+#!/bin/bash
+
+cd "$(dirname "$0")"
+
+for f in buildlog/*.log; do
+  if [ "$(tail -n1 $f)" != "+ exit 0" ]; then
+    echo $(basename $f .log)
+  fi
+done
