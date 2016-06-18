@@ -1,12 +1,16 @@
 #!/bin/bash
 
+# 二重起動の防止
+PROCS=`pgrep $(basename $0)`
+if [ `echo $PROCS | wc -w` -ge 2 ]; then
+    echo "already running `basename $0`"
+    exit 1
+fi
+
 cd `dirname $0`
 
 while true; do
-    if ! inotifywait waiting -e attrib -e create -t 60; then
-        echo "inotifywait failed" 1>&2
-        exit 1
-    fi
+    inotifywait waiting -e attrib -e create -t 60
 
     while true; do
         COMMAND=`ls waiting/ -1 -t -r | head -n 1`
@@ -21,7 +25,7 @@ while true; do
         mkdir -p logs/$COMMAND
 
         echo "---- start ./scripts/$COMMAND.sh at $START_AT"
-        ./scripts/$COMMAND.sh > logs/$COMMAND/stdout 2>logs/$COMMAND/stderr
+        ./fork.sh ./scripts/$COMMAND.sh > logs/$COMMAND/stdout 2>logs/$COMMAND/stderr
         RESULT=$?
         echo "---- end ./scripts/$COMMAND.sh result=$RESULT"
         echo $? > logs/$COMMAND/status
