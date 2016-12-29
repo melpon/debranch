@@ -28,9 +28,12 @@ fetch() {
       mv "$d/$1" . && \
       rm -rf "$d"
     fi
-  else
+  elif [[ -z "$site" ]]; then
     echo "copying $1" 
     cp "$srcdir/sources/$1" .
+  else
+    echo "copying $site"
+    cp "$srcdir/sources/$site" ./"$1"
   fi
 }
 gpg_wrap() {
@@ -104,7 +107,7 @@ gpg_wrap() {
   for k in ${!GPG[@]}; do
     f="$(basename "$k")"
     s="${GPG[$k]:-.sig}"
-    if [ -f "$f" -a -s "$f$s" ] && gpg_wrap --verify "$f$s" 2> /dev/null; then
+    if [ -f "$f" -a -s "$f$s" ] && gpg_wrap --verify "$f$s" "$f" 2> /dev/null; then
       echo "$f: OK"
       continue
     fi
@@ -114,11 +117,12 @@ gpg_wrap() {
       success=false
       continue
     fi
-    if ! gpg_wrap --verify "$f$s" ; then
+    if ! gpg_wrap --verify "$f$s" "$f" 2> /dev/null; then
       echo "signature unmatch: $k" >&2
       success=false
       continue
     fi
+    echo "$f: OK"
   done
   for k in ${!NOVERIFY[@]}; do
     f="$(basename "$k")"

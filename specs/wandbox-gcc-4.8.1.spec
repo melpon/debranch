@@ -9,6 +9,9 @@ BuildRequires: libgmp-dev libmpfr-dev libmpc-dev libc6-dev-i386 realpath libtool
 Source0: http://ftp.gnu.org/gnu/gcc/gcc-%{version}/gcc-%{version}.tar.bz2
 Source1: gcc-4.5.4-multiarch.patch
 Source2: gcc-4.4.7-multiarch.patch
+Source3: gcc-6.1.0-libatomic.patch
+Source4: gcc-6.2.0-libatomic.patch
+Source5: gcc-6.3.0-libatomic.patch
 URL: http://melpon.org/wandbox
 
 %define _prefix /opt/wandbox/gcc-%{version}
@@ -20,7 +23,7 @@ a component of wandbox service
 
 %prep
 %setup -q -c -T -a 0
-cp %{SOURCE1} %{SOURCE2} .
+cp %{SOURCE1} %{SOURCE2} %{SOURCE3} %{SOURCE4} %{SOURCE5} .
 cd gcc-%{version}
 find .. -maxdepth 1 -name "gcc-4.8.1*.patch" -print0 | xargs -0 cat | patch -p1
 cd ..
@@ -52,6 +55,9 @@ rm -rf %{buildroot}
 %{_prefix}/libexec
 
 %changelog
+ * Thu Dec 29 2016 kikairoya <kikairoya@gmail.com>
+ - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55930
+
  * Mon May 26 2014 kikairoya <kikairoya@gmail.com>
  - ensure /lib exists
 

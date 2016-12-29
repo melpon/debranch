@@ -26,7 +26,7 @@ else
 fi
 mv fpc-%{version}.$prebuilt prebuilt
 cd prebuilt
-echo $PWD | HOME=$PWD PREFIX=s/home/builder/debranch/genspec ./install.sh
+echo $PWD | HOME=$PWD PREFIX=s/home/kikairoya/debranch/genspec ./install.sh
 cd ..
 
 %build
