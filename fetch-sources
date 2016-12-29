@@ -26,7 +26,7 @@ fetch() {
       echo "fetching $1 from SVN $r" 
       ( cd "$d" && svn export -q "$r" "$(echo $(basename "$1") | sed 's/\.tar\(\.gz\|\.bz2\|\.Z\|\.xz\|\.lzma\)\?$//')" && tar caf "$1" * ) && \
       mv "$d/$1" . && \
-      mv -rf "$d"
+      rm -rf "$d"
     fi
   else
     echo "copying $1" 

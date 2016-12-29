@@ -106,6 +106,7 @@ test_need_to_build() {
 }
 $keep || set -e
 cd "$(dirname "$0")"
+mkdir -p buildlog
 echo "build start: $(date -u +%FT%TZ)" > buildlog/status
 if $roomba; then
   rm -rf $(rpm --eval='%{_builddir} %{_buildrootdir} %{_rpmdir} %{_specdir} %{_srcrpmdir}')
